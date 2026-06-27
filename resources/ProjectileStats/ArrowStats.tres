@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ProjectileStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/projectiles/ProjectileStats.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+initial_speed = 300.0
+cone_speed = 272.0
+proj_gravity = 200.0

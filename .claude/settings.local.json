@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Read(//c/Users/Alejandro/AppData/Local/**)",
+      "Read(//c/Users/Alejandro/Desktop/**)",
+      "PowerShell(winget install --id GodotEngine.GodotEngine -e --accept-package-agreements --accept-source-agreements --disable-interactivity)",
+      "PowerShell($g = \"C:\\\\Users\\\\Alejandro\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\Godot_v4.7-stable_win64.exe\"; $p = \"C:\\\\Users\\\\Alejandro\\\\Desktop\\\\My Tower Fall\"; & $g --headless --path $p --editor --quit 2>&1 | Select-Object -Last 80)",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --headless --path '/c/Users/Alejandro/Desktop/My Tower Fall' tests/IntegrationTest.tscn --quit-after 2000)",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --path '/c/Users/Alejandro/Desktop/My Tower Fall' tests/CaptureShot.tscn --quit-after 200)",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --headless --path '/c/Users/Alejandro/Desktop/My Tower Fall' tests/MonsterTest.tscn --quit-after 400)",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --headless --path '/c/Users/Alejandro/Desktop/My Tower Fall' tests/MonsterTest.tscn)",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --headless --path '/c/Users/Alejandro/Desktop/My Tower Fall' --quit-after 120)",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --path '/c/Users/Alejandro/Desktop/My Tower Fall' tests/CaptureMenu.tscn --quit-after 120)",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --headless --path '/c/Users/Alejandro/Desktop/My Tower Fall' --editor --quit)",
+      "Bash(echo \"=== editor import \\(refresh cache + parse\\) ===\")",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --headless --path '/c/Users/Alejandro/Desktop/My Tower Fall' tests/V03Test.tscn)",
+      "Bash(echo \"=== editor import ===\")",
+      "Bash(/c/Users/Alejandro/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7-stable_win64.exe --headless --path '/c/Users/Alejandro/Desktop/My Tower Fall' tests/V05Test.tscn)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(ls -d ~/.claude/projects/*/ 2>/dev/null | head -50; echo \"---\"; ls -1 ~/.claude/projects/ | wc -l)",
+      "Bash(python3 -)",
+      "Skill(update-config)",
+      "Skill(update-config:*)"
+    ]
+  }
+}

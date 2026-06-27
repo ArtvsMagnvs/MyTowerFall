@@ -1,0 +1,45 @@
+; Engine configuration file.
+; Niide: El Círculo Dárico — Godot 4.x project
+; Generated as part of the MVP implementation following DOCUMENTO_MAESTRO.md
+
+config_version=5
+
+[application]
+
+config/name="Niide"
+config/description="Niide: El Círculo Dárico. Plataformas de acción 2D pixel art. Un golpe, un kill."
+run/main_scene="res://scenes/ui/MainMenu.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.svg"
+config/version="0.8.7"
+
+[autoload]
+
+VersionManager="*res://scripts/autoloads/VersionManager.gd"
+ScreenWrapper="*res://scripts/autoloads/ScreenWrapper.gd"
+DebugManager="*res://scripts/autoloads/DebugManager.gd"
+InputManager="*res://scripts/autoloads/InputManager.gd"
+AudioManager="*res://scripts/autoloads/AudioManager.gd"
+GameManager="*res://scripts/autoloads/GameManager.gd"
+SceneManager="*res://scripts/autoloads/SceneManager.gd"
+
+[display]
+
+window/size/viewport_width=320
+window/size/viewport_height=180
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[physics]
+
+common/physics_ticks_per_second=60
+2d/default_gravity=900.0
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.05, 0.06, 0.1, 1)
