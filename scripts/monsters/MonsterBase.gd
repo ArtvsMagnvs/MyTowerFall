@@ -39,6 +39,10 @@ var _los_ray: RayCast2D
 var _no_los_timer := 0.0    # tiempo seguido sin línea de visión de ataque
 var _patrol_dist := 0.0     # distancia recorrida durante el escape de patrulla
 var _patrol_prev := Vector2.ZERO
+# Anti-stuck por PROGRESO: anclas y ventana (V0.8.7). El _ready() las inicializa con
+# la posición actual; is_stuck_no_los() y reset_stuck() las usan/ponen a cero.
+var _stuck_anchor := Vector2.ZERO
+var _stuck_check := 0.0
 
 func _ready() -> void:
 	add_to_group("monster")
