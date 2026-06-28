@@ -7,7 +7,10 @@ class_name Slime
 ## V0.8.6: anti-stuck (bloqueo de patrulla cuando se atasca en CHASE).
 ## V0.8.7.2: gate de LoS en CHASE (no persigue si hay geometría en medio) + más tiempo de
 ## patrulla forzada para que el Slime se aleje del jugador antes de re-perseguir.
-## Autor: Claude Code · Versión: 0.8.7.2
+## V0.8.7.3: gate de PLATAFORMA — el Slime solo persigue si el jugador está en su misma
+## planta (|dy| < 14 px ≈ 1.4 tiles). Si está claramente en otra plataforma, patrulla y
+## olvida de verdad (inspirado en TowerFall Wiki: los Slimes no persiguen al jugador).
+## Autor: Claude Code · Versión: 0.8.7.3
 
 enum G { PATROL, CHASE, WINDUP, AIRBORNE, LAND }
 
@@ -19,6 +22,9 @@ const JUMP_VX := 30.0        # V0.8.2 A-3: igualado a CHASE_SPEED (sin "aceleró
 const SLIME_GRAVITY := 112.0 # V0.8.2 A-4: gravedad propia reducida para altura ×2
 const WINDUP_T := 0.2
 const LAND_T := 0.4
+# V0.8.7.3: tolerancia vertical de "misma plataforma". El Slime solo persigue si el jugador
+# está a menos de esta distancia en Y. 14 px ≈ 1.4 tiles (un Slime apenas salta 1 tile).
+const PLATFORM_Y_TOLERANCE := 14.0
 
 # V0.8.6.1 anti-stuck por PROGRESO real (no por velocidad: detecta también la oscilación en
 # el sitio bajo un jugador inalcanzable) + gate de LoS (solo circula si hay geometría en medio).
@@ -65,9 +71,15 @@ func _patrol() -> void:
 		_no_los_t = 0.0   # V0.8.7.2: reset del timer de LoS mientras dura el lock
 		return
 	var p := get_nearest_player()
+	# V0.8.7.3: gate de plataforma. Si el jugador está claramente en OTRA plataforma
+	# (|dy| >= PLATFORM_Y_TOLERANCE ≈ 1.4 tiles arriba o abajo), NO perseguir. El Slime
+	# sigue patrullando y se olvida del jugador hasta que baje a su planta. Inspirado en
+	# TowerFall Wiki: los Slimes no persiguen al jugador entre plataformas.
 	# V0.8.7.2: solo re-perseguir si hay LoS directa (sin paredes/escenario en medio). Si no,
 	# seguir patrullando hasta tener línea de visión clara.
-	if p != null and absf(p.global_position.x - global_position.x) < DETECT and has_clear_los(p):
+	if p != null and absf(p.global_position.x - global_position.x) < DETECT \
+			and absf(p.global_position.y - global_position.y) < PLATFORM_Y_TOLERANCE \
+			and has_clear_los(p):
 		_state = G.CHASE
 		_no_los_t = 0.0
 		reset_stuck()   # ventana fresca al empezar a perseguir
@@ -77,6 +89,16 @@ func _chase(delta: float) -> void:
 	var p := get_nearest_player()
 	if p == null:
 		_no_los_t = 0.0
+		_state = G.PATROL
+		return
+	# V0.8.7.3: gate de plataforma dentro de CHASE. Si el jugador salta a otra plataforma
+	# durante la persecución, salir inmediatamente a PATROL (sin esperar al gate de LoS).
+	var dy_chase := p.global_position.y - global_position.y
+	if absf(dy_chase) >= PLATFORM_Y_TOLERANCE:
+		_no_los_t = 0.0
+		_patrol_lock = STUCK_PATROL_T
+		_dir = -_dir   # alejarse del jugador
+		velocity.x = _dir * PATROL_SPEED
 		_state = G.PATROL
 		return
 	# V0.8.7.2: gate de LoS. Si llevamos >NO_LOS_THRESHOLD sin línea de visión al jugador

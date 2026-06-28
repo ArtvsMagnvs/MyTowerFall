@@ -3,7 +3,8 @@ extends Node
 ## usuario), que la detección por VELOCIDAD no cubría (oscilación con velocidad alta pero
 ## desplazamiento neto ~0):
 ##  E) Troll bajo un jugador elevado con plataforma entre medias → no se queda clavado
-##     oscilando: el anti-stuck (progreso+LoS) lo hace patrullar y moverse.
+##     oscilando. V0.8.7.3: con el gate de plataforma, el Troll directamente NO entra en
+##     CHASE (|dy| >= 14 px) — patrulla y olvida. Validamos que se mueve Y no rebota.
 ##  F) Bat DEBAJO de una plataforma, jugador encima → NUNCA carga el dash sin LoS, y se
 ##     desbloquea (el camino del dash snappeado también se comprueba).
 ##  G) Bat ENCIMA de una plataforma, jugador debajo → idem.
@@ -48,20 +49,36 @@ func _run() -> void:
 	get_tree().quit(0 if (e and f and g) else 1)
 
 ## Troll en el suelo, jugador elevado con plataforma horizontal entre medias.
+## V0.8.7.3: con el gate de plataforma (|dy| >= 14 px), el Troll directamente NO entra en
+## CHASE — patrulla y se olvida. La aserción antigua esperaba `saw_lock=true` (el Troll se
+## quedaba stuck bajo la plataforma y el anti-stuck le forzaba a circular). Con la nueva
+## semántica, el Troll nunca llega a CHASE, así que `patrol_lock` puede quedarse en 0.
+## Validamos: (a) el Troll NO está clavado (se mueve >15 px), (b) sigue vivo, (c) no
+## rebota entre estados (medimos cambios de dirección como proxy de oscilación en CHASE).
 func _troll_under_elevated() -> bool:
 	var plat := _make_wall(Vector2(160, 100), Vector2(90, 6))   # x[115,205] y[97,103]
 	var troll := await _spawn("res://scenes/monsters/StoneTroll.tscn", Vector2(160, 164)) as MonsterBase
 	var pl := await _frozen_player(Vector2(160, 75))            # encima de la plataforma
-	var saw_lock := false
 	var minx := 999.0
 	var maxx := -999.0
+	var prev_dir_sign := 0.0
+	var sign_changes := 0
 	for i in 220:
 		await get_tree().physics_frame
 		if not is_instance_valid(troll): break
-		if troll._patrol_lock > 0.0: saw_lock = true
 		minx = minf(minx, troll.global_position.x)
 		maxx = maxf(maxx, troll.global_position.x)
-	var ok := saw_lock and (maxx - minx) > 15.0 and is_instance_valid(troll) and not troll.is_dead
+		# Contamos cambios de signo de velocidad horizontal (proxy de oscilación chase↔patrol).
+		var vx := troll.velocity.x
+		var sign := 0.0
+		if vx > 1.0: sign = 1.0
+		elif vx < -1.0: sign = -1.0
+		if sign != 0.0 and prev_dir_sign != 0.0 and sign != prev_dir_sign:
+			sign_changes += 1
+		if sign != 0.0: prev_dir_sign = sign
+	# V0.8.7.3: "no clavado-cíclico" = se mueve Y no rebota mucho. PATROL cambia al chocar
+	# con pared (gira), eso es 1-2 cambios. CHASE↔PATROL ping-pong serían >=5.
+	var ok := (maxx - minx) > 15.0 and is_instance_valid(troll) and not troll.is_dead and sign_changes <= 4
 	if is_instance_valid(troll): troll.queue_free()
 	if is_instance_valid(pl): pl.queue_free()
 	if is_instance_valid(plat): plat.queue_free()

@@ -11,7 +11,7 @@ config/description="Niide: El Círculo Dárico. Plataformas de acción 2D pixel 
 run/main_scene="res://scenes/ui/MainMenu.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
-config/version="0.8.7.2"
+config/version="0.8.7.3"
 
 [autoload]
 

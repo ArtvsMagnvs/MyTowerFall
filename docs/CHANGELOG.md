@@ -4,6 +4,47 @@ Formato: [SemVer](https://semver.org/) — MAJOR.MINOR.PATCH
 
 ---
 
+## [0.8.7.3] — 2026-06-28 — Gate de plataforma en CHASE (Slime + Troll)
+V0.8.7.2 cortaba el "clavado-cíclico" pero el Troll seguía un patrón visible: se va 2.5s,
+re-engage al ver al jugador 1 pixel asomado, vuelve a chocar, se va 2.5s, re-engage, …
+El usuario lo describía como "se va y vuelve y se va otra vez". El bucle no era infinito
+pero resultaba raro y dejaba la sensación de que el Troll estaba "picado" con el jugador.
+
+### Solución — Gate de PLATAFORMA (Opción C del análisis TowerFall)
+Inspirado en el comportamiento de Cultists/Slimes/Crows de TowerFall (Wiki oficial):
+**los monstruos terrestres no persiguen al jugador entre plataformas**. Patrullan su
+propia planta; si el jugador entra en su vecindad, atacan; si está claramente en otra
+planta, lo ignoran. Así, la "high ground advantage" es real y se siente segura.
+
+- **Slime (`scripts/monsters/Slime.gd`):** nueva constante `PLATFORM_Y_TOLERANCE = 14 px`
+  (~1.4 tiles, un Slime apenas salta 1 tile). En `_patrol()` solo entra en CHASE si
+  `|dy| < 14 px` además de la LoS. En `_chase()` si el jugador salta a otra plataforma
+  durante la persecución, sale inmediatamente a PATROL con lock (sin esperar al gate
+  de LoS de 0.5s).
+- **Troll (`scripts/monsters/StoneTroll.gd`):** misma tolerancia. En `_ai()`, después de
+  las comprobaciones de pedrusco y puñetazo, si `|dy| >= 14 px` el Troll patrulla a
+  `PATROL_SPEED` (no `CHASE_SPEED`) y se olvida. **El pedrusco NO se gatea** (puede
+  seguir lanzándolo a otra plataforma si hay LoS — gate independiente por `dy < -10`).
+- **Murciélago y Espectro SIN CAMBIOS** (el usuario confirmó que su comportamiento actual
+  ya les gusta). Solo Slime y Troll se modifican.
+- Constantes y velocidades de los monstruos intactas (sin cambios de `CHASE_SPEED`,
+  `PATROL_SPEED`, `DETECT`, `DETECTION_RANGE` ni nada de `PlayerStats.tres`).
+
+### Tests
+- `V086bTest` caso E actualizado: el Troll ya no se queda stuck bajo la plataforma (el
+  gate de plataforma lo evita ANTES del CHASE). Nueva aserción: el Troll se mueve >15 px
+  (patrol), sigue vivo, y no rebota entre estados (≤4 cambios de signo de velocidad —
+  el PATROL natural gira al chocar con pared, eso es 1-2 cambios; un ping-pong chase↔patrol
+  daría ≥5).
+- **Suite headless: 0 regresiones** en el resto de tests (Smoke, Monster, Stomp,
+  Integration, V03–V086, FWave).
+
+### Análisis TowerFall (research)
+- `towerfall.wikidot.com/enemies`: Slimes, Cultists, Bats y Crows patrullan su plataforma
+  y solo atacan si el jugador entra en close proximity. NO persiguen entre plataformas.
+- Skeleton Archers sí persiguen, pero solo con LoS directa (mismo principio que ya
+  tenemos para el Espectro).
+
 ## [0.8.7.2] — 2026-06-28 — Gate de LoS en CHASE/TRACKING + más tiempo de unstuck
 V0.8.7 (progreso+LoS) corregía el "clavado indefinido" pero dejaba un bucle feo: el monstruo
 camina ~25 px hacia el jugador → entra en CHASE → choca con la base de la plataforma →

@@ -25,6 +25,25 @@ Fecha cierre:
 ## Bugs cerrados
 
 ---
+ID: BUG-037  ·  Estado: CERRADO  ·  Severidad: BAJO  ·  Cierre: 2026-06-28 (V0.8.7.3)
+Descripción: Tras V0.8.7.2 el Troll ya no se quedaba clavado, pero seguía un patrón visible
+  de "ping-pong": patrulla 2.5s, re-engage CHASE al ver al jugador asomado, choca, patrulla
+  2.5s, re-engage, … El bucle no era infinito pero resultaba raro y daba la sensación de
+  que el Troll estaba "picado" con el jugador (cada 2.5s el ciclo se repetía).
+Causa raíz: el gate de LoS de V0.8.7.2 funcionaba, pero la re-entrada a CHASE era demasiado
+  fácil — bastaba con que el jugador asomara 1 pixel para que el Troll volviera a perseguir.
+  En otras palabras: el Troll "olvidaba" al jugador temporalmente pero no de verdad.
+Fix: nuevo gate de **PLATAFORMA** (`PLATFORM_Y_TOLERANCE = 14 px` ≈ 1.4 tiles) en Slime y
+  Troll (Bat y Espectro quedan como estaban — su comportamiento actual gustó). El Slime solo
+  entra en CHASE si `|dy| < 14 px`; el Troll análogamente si `|dy| >= 14 px` patrulla a
+  `PATROL_SPEED` (no `CHASE_SPEED`) y se olvida. Si el jugador salta a otra plataforma
+  durante la persecución, salida inmediata a PATROL con lock (sin esperar al gate de LoS).
+  Inspirado en TowerFall Wiki: Cultists/Slimes/Crows no persiguen entre plataformas, solo
+  atacan si el jugador entra en su vecindad. El pedrusco del Troll NO se gatea (puede
+  seguir lanzándolo a otra plataforma si hay LoS). Verificado: V086bTest caso E actualizado
+  (mueve >15 px, vivo, ≤4 cambios de signo de velocidad). Sin regresiones en el resto de
+  la suite.
+---
 ID: BUG-036  ·  Estado: CERRADO  ·  Severidad: ALTO  ·  Cierre: 2026-06-28 (V0.8.7.2)
 Descripción: Los monstruos (Troll, Slime, Murciélago) entraban en un bucle "clavado-cíclico" cuando
   el jugador estaba sobre una plataforma/estructura con geometría en medio: caminaban unos px hacia

@@ -6,7 +6,11 @@ class_name StoneTroll
 ## V0.8.6: anti-stuck (bloqueo de patrulla cuando se atasca en CHASE).
 ## V0.8.7.2: gate de LoS en chase (no persigue si hay geometría en medio) + más tiempo de
 ## patrulla forzada para que el Troll se aleje antes de re-perseguir.
-## Autor: Claude Code · Versión: 0.8.7.2
+## V0.8.7.3: gate de PLATAFORMA — el Troll solo persigue si el jugador está en su misma
+## planta (|dy| < 14 px ≈ 1.4 tiles). El pedrusco NO se gatea (puede lanzarlo a otra
+## plataforma si hay LoS). Inspirado en TowerFall Wiki: los Cultists no persiguen entre
+## plataformas, solo atacan si el jugador entra en su vecindad.
+## Autor: Claude Code · Versión: 0.8.7.3
 
 const PATROL_SPEED := 20.0
 const CHASE_SPEED := 35.0      # V0.4 p.1b
@@ -20,6 +24,10 @@ const ROCK_CD := 5.0
 const ROCK_SPEED := 160.0
 const ROCK_GRAVITY := 180.0
 const WINDUP_T := 0.4
+# V0.8.7.3: tolerancia vertical de "misma plataforma". El Troll NO persigue si el jugador
+# está a más de esta distancia en Y. 14 px ≈ 1.4 tiles (el Troll no salta, solo anda).
+# El pedrusco sigue funcionando contra plataformas elevadas (gate independiente por LoS).
+const PLATFORM_Y_TOLERANCE := 14.0
 
 # V0.8.6.1 anti-stuck por PROGRESO real + LoS (detecta la oscilación en el sitio sobre/bajo
 # un jugador inalcanzable con geometría en medio). NO acumula en patrulla ni atacando.
@@ -96,6 +104,18 @@ func _ai(delta: float) -> void:
 		# Puñetazo si está al lado y a la misma altura: primero la fase de anticipación.
 		if absf(dx) < PUNCH_RANGE and absf(dy) < 24.0 and _punch_cd <= 0.0:
 			_begin_punch_windup(signf(dx))
+			return
+		# V0.8.7.3: gate de PLATAFORMA. Si el jugador está claramente en otra plataforma
+		# (|dy| >= PLATFORM_Y_TOLERANCE ≈ 1.4 tiles), el Troll NO persigue — patrulla y se
+		# olvida de verdad. El pedrusco, en cambio, sigue siendo válido (ya está gateado por
+		# LoS y por 'dy < -10' arriba en este mismo bloque). Inspirado en TowerFall Wiki:
+		# los Cultists no persiguen entre plataformas.
+		if absf(dy) >= PLATFORM_Y_TOLERANCE:
+			_no_los_t = 0.0
+			reset_stuck()
+			if is_on_wall():
+				_dir = -_dir
+			velocity.x = _dir * PATROL_SPEED
 			return
 		# Anti-stuck (V0.8.6.1): por progreso real + LoS. Si no avanza Y hay geometría entre el
 		# Troll y el jugador (no puede alcanzarlo ni atacarlo) → patrulla forzada para circular.
