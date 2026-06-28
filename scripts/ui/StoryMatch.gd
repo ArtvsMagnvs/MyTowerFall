@@ -129,9 +129,10 @@ func _respawn_player() -> void:
 	var target: Vector2 = _level.safe_respawn_pos(corpse_pos)
 	var start := _hud.life_anchor(1)
 	# V0.8.7.4: la gema viaja al CUERPO (no al safe pos). Al llegar se ejecuta la nueva
-	# secuencia visual: elevación del cadáver, aura de la gema, mini-carga con rayos
-	# eléctricos, y finalmente el respawn (onda expansiva + blink). El respawn ocurre
-	# en `target` (safe pos) para evitar spawnear dentro de geometría.
+	# secuencia visual: elevación del cadáver, aura de la gema, y finalmente el
+	# respawn (onda expansiva + blink). El respawn ocurre en `target` (safe pos)
+	# para evitar spawnear dentro de geometría.
+	# V0.8.7.4.2: la "mini-carga con rayos eléctricos" eliminada — tapaba la onda.
 	var ball := _make_gem(start, _player.body_color)
 	_level.add_child(ball)
 	var corpse_node: Node2D = _player._last_corpse if is_instance_valid(_player._last_corpse) else null
@@ -141,7 +142,9 @@ func _respawn_player() -> void:
 ## V0.8.7.4: secuencia visual de respawn.
 ## 1. Gema viaja al cuerpo (0.9s, misma curva que antes).
 ## 2. Al llegar: cuerpo se eleva + se ilumina (0.3s), gema crece con aura (1s total).
-## 3. Gema desaparece, mini-carga con rayos eléctricos decorativos (0.5s).
+## 3. Gema desaparece y el jugador aparece con la onda expansiva + blink.
+##    (V0.8.7.4 original incluía una "mini-carga con rayos eléctricos" de 0.5s
+##     entre el paso 2 y el 3; eliminada en V0.8.7.4.2 porque tapaba la onda.)
 ## 4. Player respawn (onda expansiva existente + blink de invuln 1.5s existente).
 ## Los rayos son puramente decorativos (sin hitbox) — la onda expansiva sigue siendo
 ## el momento letal. Las animaciones de "cuerpo flotando" y "durante la onda" son
@@ -187,59 +190,15 @@ func _on_gem_arrived(ball: ColorRect, corpse_node: Node2D, target: Vector2,
 	tw_ball.set_parallel(true)
 	tw_ball.tween_property(ball, "scale", Vector2(1.7, 1.7), 1.0).set_trans(Tween.TRANS_SINE)
 	tw_ball.tween_property(ball, "modulate:a", 0.0, 0.4).set_delay(0.6)
-	# Paso 3: mini-carga con rayos eléctricos decorativos (0.5s).
-	# Los rayos son un anillo de líneas zigzagueantes que rota. Sin hitbox.
-	# TODO pixel art: la "mini-carga" debería ser sprite único de "carga sobre cuerpo".
+	# Paso 3 (V0.8.7.4.2): sin mini-carga intermedia — la gema se desvanece y el
+	# jugador aparece directamente con la onda expansiva + blink de su respawn()
+	# estándar. El "remolino de rayos" de V0.8.7.4 era ruido creativo que tapaba la
+	# propia onda; eliminado en StoryMatch y VersusMatch.
 	tw_ball.chain().tween_callback(func() -> void:
 		ball.queue_free()
 		if is_instance_valid(aura): aura.queue_free()
-		_play_mini_charge(target)
-		# V0.8.7.4 fix: respawn() estándar — _play_floating_vfx() ya está incluido.
 		if is_instance_valid(player):
 			player.respawn(target))
-
-## V0.8.7.4: mini-carga con rayos eléctricos decorativos (0.5s) en `target`.
-## Dos elementos visuales: anillo de rayos zigzagueantes que rota + pulso circular.
-func _play_mini_charge(target: Vector2) -> void:
-	# Rayos: 6 líneas zigzagueantes alrededor del punto, rotando en círculo.
-	var rays_container := Node2D.new()
-	rays_container.global_position = target
-	rays_container.modulate = Color(1, 1, 1, 0.0)   # fade in
-	_level.add_child(rays_container)
-	var n_rays := 6
-	for i in n_rays:
-		var ray := Line2D.new()
-		var ang := TAU * i / n_rays
-		# Zigzag: tres puntos, el del medio sobresale hacia afuera.
-		var inner := Vector2.RIGHT.rotated(ang) * 7.0
-		var outer := Vector2.RIGHT.rotated(ang) * 14.0
-		var zigzag := Vector2.RIGHT.rotated(ang + 0.15) * 11.0
-		ray.add_point(inner)
-		ray.add_point(zigzag)
-		ray.add_point(outer)
-		ray.width = 1.5
-		ray.default_color = Color(0.75, 0.92, 1.0, 0.9)
-		rays_container.add_child(ray)
-	var tw_rays := rays_container.create_tween()
-	tw_rays.set_parallel(true)
-	tw_rays.tween_property(rays_container, "modulate:a", 1.0, 0.1)
-	tw_rays.tween_property(rays_container, "rotation", TAU, 0.5).set_trans(Tween.TRANS_LINEAR)
-	tw_rays.tween_property(rays_container, "scale", Vector2(1.4, 1.4), 0.5).set_trans(Tween.TRANS_SINE)
-	tw_rays.chain().tween_property(rays_container, "modulate:a", 0.0, 0.15)
-	tw_rays.tween_callback(rays_container.queue_free)
-	# Pulso circular central (sin hitbox, decorativo).
-	var pulse := Polygon2D.new()
-	var pr := 4.0
-	pulse.polygon = PackedVector2Array([
-		Vector2(-pr, -pr), Vector2(pr, -pr), Vector2(pr, pr), Vector2(-pr, pr)])
-	pulse.color = Color(1.0, 1.0, 0.6, 0.7)
-	pulse.global_position = target
-	_level.add_child(pulse)
-	var tw_pulse := pulse.create_tween()
-	tw_pulse.set_parallel(true)
-	tw_pulse.tween_property(pulse, "scale", Vector2(2.5, 2.5), 0.5).set_trans(Tween.TRANS_SINE)
-	tw_pulse.tween_property(pulse, "modulate:a", 0.0, 0.5)
-	tw_pulse.chain().tween_callback(pulse.queue_free)
 
 ## V0.8.7.4: crea una "gema" como ColorRect cuadrado con el color del cuerpo del jugador.
 ## Reutilizable por StoryMatch y VersusMatch.
