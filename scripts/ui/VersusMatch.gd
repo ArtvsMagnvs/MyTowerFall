@@ -42,8 +42,11 @@ func _start_round() -> void:
 	var spawns := _level.player_spawns()
 	_p1.lives = PlayerBase.LIVES_MAX
 	_p2.lives = PlayerBase.LIVES_MAX
-	_p1.respawn(spawns[0])
-	_p2.respawn(spawns[1 % spawns.size()])
+	# V0.8.7.4.1: al inicio de cada ronda ambos jugadores arrancan con AMMO_INITIAL (3).
+	# Si mueren durante la ronda y se reviven con gema, obtienen solo AMMO_START (1)
+	# vía _respawn_player → player.respawn() sin override.
+	_p1.respawn(spawns[0], PlayerBase.AMMO_INITIAL)
+	_p2.respawn(spawns[1 % spawns.size()], PlayerBase.AMMO_INITIAL)
 	_hud.set_versus(GameManager.p1_wins, GameManager.p2_wins, GameManager.rounds_to_win)
 	_update_lives_hud()
 	_hud.show_banner("¡LISTOS!", 1.0)

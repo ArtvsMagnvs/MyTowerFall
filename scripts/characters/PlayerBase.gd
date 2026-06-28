@@ -42,9 +42,12 @@ var is_dead := false
 var frozen := false
 
 # Munición universal de proyectiles
-var ammo: int = 1   # V0.8.7.4: default 3 → 1 (consistente con AMMO_START)
+# V0.8.7.4.1: split — AMMO_INITIAL = 3 al spawnear por primera vez (o al inicio de cada
+# ronda en Versus); AMMO_START = 1 al revivir tras morir+gema de vida.
 const AMMO_MAX := 5
-const AMMO_START := 1   # V0.8.7.4: 3 → 1 (al revivir se obtiene solo 1 flecha)
+const AMMO_INITIAL := 3   # al spawnear / al inicio de cada ronda
+const AMMO_START := 1     # al revivir tras muerte (gema de vida)
+var ammo: int = AMMO_INITIAL   # default = 3 al instanciar el personaje
 
 # Vidas (modo Versus) — V0.2 punto 11
 var lives := 4
@@ -95,7 +98,10 @@ func _ready() -> void:
 	add_to_group("debuggable")
 	body_size *= ENTITY_SCALE
 	stats = _load_stats()
-	ammo = AMMO_START
+	# V0.8.7.4.1: ammo inicial = AMMO_INITIAL (3) — el default de la var ya es 3, pero lo
+	# reaffirmamos aquí por claridad. Si el spawner quiere otro valor (ej. VersusMatch
+	# inicio de ronda), puede pasar override a respawn() o setear ammo directamente.
+	ammo = AMMO_INITIAL
 	collision_layer = L_PLAYER_BODY | L_STOMP_BODY   # stompable (V0.5.1)
 	# V0.8.2 B-1: el jugador colisiona con otros jugadores y con los monstruos SÓLIDOS
 	# (Slime/Troll/Murciélago). El Espectro no lleva L_MONSTER_SOLID → es atravesable.
@@ -717,12 +723,14 @@ func _spawn_death_particles() -> void:
 ## Reaparición con invulnerabilidad/parpadeo y onda expansiva (V0.2 punto 11).
 ## V0.8.7.4: aplica un efecto "flotando" durante la onda expansiva (sutil Y offset + brillo)
 ## como placeholder de la animación única que llegará con el pixel art.
-func respawn(at: Vector2) -> void:
+## V0.8.7.4.1: ammo_override opcional — al inicio de ronda/spawn inicial se pasa
+## AMMO_INITIAL (3); al revivir tras muerte se usa el default AMMO_START (1).
+func respawn(at: Vector2, ammo_override: int = AMMO_START) -> void:
 	global_position = at
 	is_dead = false
 	is_attacking = false
 	velocity = Vector2.ZERO
-	ammo = AMMO_START
+	ammo = ammo_override
 	state = State.IDLE
 	_last_wall_jumped = WallSide.NONE
 	_wall_hang_used = false

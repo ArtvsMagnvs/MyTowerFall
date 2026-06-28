@@ -194,9 +194,9 @@ func _on_gem_arrived(ball: ColorRect, corpse_node: Node2D, target: Vector2,
 		ball.queue_free()
 		if is_instance_valid(aura): aura.queue_free()
 		_play_mini_charge(target)
-		# Paso 4: respawn del jugador en target. Pasa el corpse (si existe) a la onda
-		# para que PlayerBase pueda aplicar la animación "flotando mientras ocurre la onda".
-		player.respawn_with_visual_state(target, corpse_node if is_instance_valid(corpse_node) else null))
+		# V0.8.7.4 fix: respawn() estándar — _play_floating_vfx() ya está incluido.
+		if is_instance_valid(player):
+			player.respawn(target))
 
 ## V0.8.7.4: mini-carga con rayos eléctricos decorativos (0.5s) en `target`.
 ## Dos elementos visuales: anillo de rayos zigzagueantes que rota + pulso circular.

@@ -24,8 +24,8 @@ Actualizar las secciones relevantes cuando se tomen nuevas decisiones o cambie e
 
 ## ESTADO ACTUAL
 
-**Versión en `project.godot`:** 0.8.7.4
-**Última versión del CHANGELOG:** 0.8.7.4 (2026-06-28) — Cadáver con screen wrap · 1 flecha al revivir · -15% velocidades · Nueva secuencia de respawn
+**Versión en `project.godot`:** 0.8.7.4.1
+**Última versión del CHANGELOG:** 0.8.7.4.1 (2026-06-28) — Fix crash en respawn + split AMMO_INITIAL (3) vs AMMO_START (1)
 **Fase de desarrollo:** Mecánicas de juego terminadas. Arte en placeholder geométrico. Audio API lista, sin assets.
 **Siguiente tarea documentada:** Continuar en 0.8.x con ajustes de mecánicas hasta cerrar en 0.9.0.
 
@@ -187,7 +187,7 @@ proj_gravity   = 170.0  px/s²  # V0.8.7.4: -15% (200 → 170)
 - **Física:** Parabólica (`proj_gravity = 200 px/s²`). Rotación según trayectoria.
 - **Clavado:** Al impactar geometría, las flechas y hachas quedan clavadas 8s (recogibles). Los proyectiles espectrales y piedras desaparecen al impactar.
 - **Atracción gravitacional:** Radio = 1.2× la media anchura del objetivo, cono frontal de ±60°. Fuerza como aceleración (400 px/s²), proporcional a la cercanía. Tope: 1.15× velocidad inicial.
-- **Munición:** Stock inicial 1 (V0.8.7.4: era 3), máximo 5. Contador visual sobre el personaje.
+- **Munición:** Stock inicial 3 (`AMMO_INITIAL`), máximo 5. Al revivir tras muerte + gema: 1 (`AMMO_START`). Contador visual sobre el personaje.
 - **Recogida:** Caminar sobre una flecha clavada la recoge (+1 munición).
 
 ### Arquero (`ArcherPlayer`)
