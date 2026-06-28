@@ -24,8 +24,8 @@ Actualizar las secciones relevantes cuando se tomen nuevas decisiones o cambie e
 
 ## ESTADO ACTUAL
 
-**Versión en `project.godot`:** 0.8.7.3
-**Última versión del CHANGELOG:** 0.8.7.3 (2026-06-28) — Gate de plataforma en CHASE (Slime + Troll; Bat/Espectro sin cambios)
+**Versión en `project.godot`:** 0.8.7.4
+**Última versión del CHANGELOG:** 0.8.7.4 (2026-06-28) — Cadáver con screen wrap · 1 flecha al revivir · -15% velocidades · Nueva secuencia de respawn
 **Fase de desarrollo:** Mecánicas de juego terminadas. Arte en placeholder geométrico. Audio API lista, sin assets.
 **Siguiente tarea documentada:** Continuar en 0.8.x con ajustes de mecánicas hasta cerrar en 0.9.0.
 
@@ -36,7 +36,7 @@ Actualizar las secciones relevantes cuando se tomen nuevas decisiones o cambie e
 - Cuatro monstruos con IA propia: Slime, Espectro Arquero, Troll de Piedra, Murciélago Sombra
 - Stomp (jugador↔jugador y jugador↔monstruo)
 - Screen wrapping estilo TowerFall (ghost sprite)
-- Sistema de vidas (4 vidas, respawn con onda expansiva, cristal que viaja al cadáver)
+- Sistema de vidas (4 vidas, respawn con secuencia animada: gema viaja al cuerpo → cuerpo se eleva → aura de gema 1s → mini-carga con rayos 0.5s → onda expansiva + blink 1.5s)
 - Tres niveles completos (diseño de arena 240×180)
 - Modos Versus (mejor de 5 rondas) e Historia (3 niveles, oleadas, 4 vidas)
 - HUD con paneles laterales de 40px
@@ -126,39 +126,39 @@ Resource
 
 ## PARÁMETROS CANÓNICOS ACTUALES
 
-Estos son los valores vigentes en `resources/PlayerStats.tres` y `ArrowStats.tres` a fecha de V0.8.0. **Cualquier cambio de valores debe actualizarse aquí.**
+Estos son los valores vigentes en `resources/PlayerStats.tres` y `ArrowStats.tres` a fecha de V0.8.7.4 (-15% global aplicado a las velocidades). **Cualquier cambio de valores debe actualizarse aquí.**
 
 ### Jugador (`PlayerStats.tres`)
 ```
-walk_speed          = 78.0   px/s
-jump_velocity       = -254.0 px/s    (×2 aplicado en V0.5)
-gravity             = 900.0  px/s²   (también en project.godot)
-max_fall_speed      = 260.0  px/s    (V0.8.2 A-2: ÷2)
-wall_jump_push      = 97.5   px/s    (horizontal)
-wall_jump_vertical  = -269.0 px/s    (×2 aplicado en V0.5)
-wall_slide_speed    = 60.0   px/s
+walk_speed          = 66.0   px/s       # V0.8.7.4: -15% (78 → 66)
+jump_velocity       = -216.0 px/s       # V0.8.7.4: -15% (-254 → -216)
+gravity             = 900.0  px/s²      # también en project.godot (sin cambios)
+max_fall_speed      = 221.0  px/s       # V0.8.7.4: -15% (260 → 221)
+wall_jump_push      = 83.0   px/s       # V0.8.7.4: -15% (97.5 → 83)
+wall_jump_vertical  = -229.0 px/s       # V0.8.7.4: -15% (-269 → -229)
+wall_slide_speed    = 51.0   px/s       # V0.8.7.4: -15% (60 → 51)
 wall_jump_lock      = 0.15   s
-dash_speed          = 240.0  px/s
-dash_duration       = 0.12   s       → distancia del dash: 240×0.12 = 28.8px ≈ 29px
-dash_cooldown       = 1.2    s       (V0.8.2 A-1: ×2)
-dash_invuln_frames  = 6      frames  (≈ 0.1s a 60fps)
+dash_speed          = 204.0  px/s       # V0.8.7.4: -15% (240 → 204)
+dash_duration       = 0.12   s          → distancia del dash: 204×0.12 = 24.48px ≈ 24px
+dash_cooldown       = 1.2    s          (V0.8.2 A-1: ×2)
+dash_invuln_frames  = 6      frames     (≈ 0.1s a 60fps)
 coyote_time         = 0.08   s
 jump_buffer_time    = 0.1    s
-stomp_bounce        = -180.0 px/s
-stomp_bounce_held   = -254.0 px/s    (manteniendo salto → encadena stompeos)
-ledge_slide_speed   = 30.0   px/s
+stomp_bounce        = -153.0 px/s       # V0.8.7.4: -15% (-180 → -153)
+stomp_bounce_held   = -216.0 px/s       # V0.8.7.4: -15% (-254 → -216)
+ledge_slide_speed   = 26.0   px/s       # V0.8.7.4: -15% (30 → 26)
 ledge_max_slide     = 20.0   px
 ```
 
 ### Proyectiles (`ArrowStats.tres`)
 ```
-initial_speed  = 300.0  px/s   (flecha simple)
-cone_speed     = 272.0  px/s   (cono ×3 del arquero, -10% de initial_speed)
-proj_gravity   = 200.0  px/s²
+initial_speed  = 255.0  px/s   # V0.8.7.4: -15% (300 → 255) — flecha simple
+cone_speed     = 231.0  px/s   # V0.8.7.4: -15% (272 → 231) — cono ×3 del arquero
+proj_gravity   = 170.0  px/s²  # V0.8.7.4: -15% (200 → 170)
 ```
 
 ### Altura máxima de salto
-`h = v² / (2g) = 254² / (2×900) ≈ 35.8px ≈ 3.6 tiles`
+`h = v² / (2g) = 216² / (2×900) ≈ 25.9px ≈ 2.6 tiles` (V0.8.7.4; antes 35.8px / 3.6 tiles)
 
 ---
 
@@ -181,13 +181,13 @@ proj_gravity   = 200.0  px/s²
 - **Stomp:** Caer sobre la cabeza de una entidad (jugador o monstruo) la mata. Rebote: -180 px/s (o -254 manteniendo salto para encadenar). El dash esquiva dar y recibir stomp. **Detección (reescrita V0.8.4):** PRIMARIO = las colisiones reales de `move_and_slide` (`get_slide_collision`): si el jugador toca un cuerpo stompable (`receive_stomp`) con `normal.y < -0.5` (cayó sobre él), hay stomp — robusto ante monstruos en movimiento e impactos descentrados (el rayo central fallaba porque el cuerpo sólido B-1 desviaba al jugador antes de evaluarlo). SECUNDARIO = `_stomp_ray` de 6px desde el pie (red de seguridad, incluye `L_WORLD` → no atraviesa plataformas, B-2).
 - **Impulso de muerte:** El cadáver sale despedido en la dirección del proyectil. Fuerza: 110 (flecha/hacha), 70 (pedrusco), 60 (espectral).
 - **Invulnerabilidad post-spawn:** 1.5s con parpadeo.
-- **Onda expansiva al respawn:** hitbox 3×3 tiles (24×24px) durante 0.12s.
+- **Onda expansiva al respawn:** hitbox 3×3 tiles (24×24px) durante 0.12s. Durante la onda, el player tiene una pose "flotando" (Y -2 px + brillo, V0.8.7.4 placeholder).
 
 ### Sistema de proyectiles
 - **Física:** Parabólica (`proj_gravity = 200 px/s²`). Rotación según trayectoria.
 - **Clavado:** Al impactar geometría, las flechas y hachas quedan clavadas 8s (recogibles). Los proyectiles espectrales y piedras desaparecen al impactar.
 - **Atracción gravitacional:** Radio = 1.2× la media anchura del objetivo, cono frontal de ±60°. Fuerza como aceleración (400 px/s²), proporcional a la cercanía. Tope: 1.15× velocidad inicial.
-- **Munición:** Stock inicial 3, máximo 5. Contador visual sobre el personaje.
+- **Munición:** Stock inicial 1 (V0.8.7.4: era 3), máximo 5. Contador visual sobre el personaje.
 - **Recogida:** Caminar sobre una flecha clavada la recoge (+1 munición).
 
 ### Arquero (`ArcherPlayer`)
@@ -218,7 +218,7 @@ proj_gravity   = 200.0  px/s²
 - Tamaño: 10×12px (post-escala)
 - **Patrol:** camina a 15px/s, gira en paredes
 - **Chase:** camina a 30px/s hacia el jugador, puede caer de plataformas
-- **Windup (0.2s) + salto de ataque:** JUMP_VY = -50, JUMP_VX = 30 (V0.8.2 A-3/A-4). Letal solo en la caída.
+- **Windup (0.2s) + salto de ataque:** JUMP_VY = -43, JUMP_VX = 26 (V0.8.2 A-3/A-4 + V0.8.7.4: -15%). Letal solo en la caída.
 - **Gravedad propia reducida:** `gravity = 112` (override en `_ready()`, V0.8.2 A-4): salto el doble de alto y sensación flotante.
 - **Land (0.4s):** pausa tras aterrizar, luego vuelve a Chase o Patrol.
 - Stompable siempre. Cuerpo SÓLIDO (bloquea al jugador, V0.8.2 B-1).
@@ -292,7 +292,7 @@ proj_gravity   = 200.0  px/s²
 - **Cuenta atrás 3,2,1,¡YA! al iniciar** (V0.8.2 E-3): jugadores `frozen`; los monstruos no spawnan hasta que termina.
 - **Sistema de oleadas con mini-oleadas y portales** (V0.8.2 F): cada oleada se compone de 2–4 mini-oleadas escalonadas. Cada monstruo emerge de un **portal violeta** 1s después de aparecer este. La oleada solo se supera cuando mueren TODOS los monstruos de TODAS sus mini-oleadas. Totales: N1=13, N2=18, N3=30.
 - Game Over: "HAS CAÍDO" con opción de reintentar
-- El cristal de respawn viaja a la **posición final del cadáver** (V0.8.2 D-1; 0.35s de espera + arco de 0.9s), o spawn seguro si cayó al vacío.
+- **Secuencia de respawn (V0.8.7.4)**: el cristal de respawn viaja a la posición final del cadáver (0.35s de espera + arco de 0.9s). Al llegar: el cuerpo se eleva ligeramente + se ilumina (0.3s placeholder), la gema crece con aura dorada (1s) y se desvanece, mini-carga con rayos eléctricos decorativos (0.5s, sin hitbox), y finalmente el player aparece en el spawn seguro con la onda expansiva (0.12s) y el blink de invuln (1.5s). Total ≈ 2.4s. Si el cadáver cayó al vacío, **hace screen wrap vertical** (igual que player/monstruo) en vez de eliminarse, así la flecha sigue siendo recogible (V0.8.7.4).
 
 ### Versus — cuenta atrás
 - V0.8.2 E-3: misma cuenta atrás 3,2,1,¡YA! con ambos jugadores `frozen` al inicio del match.

@@ -8,8 +8,8 @@ class_name SpecterArcher
 ## de desbloqueo perpendicular para alejarse antes de re-intentar.
 ## Autor: Claude Code · Versión: 0.8.7.2
 
-const FLY_SPEED := 70.0
-const BOLT_SPEED := 160.0
+const FLY_SPEED := 60.0          # V0.8.7.4: -15% (70 → 60)
+const BOLT_SPEED := 136.0         # V0.8.7.4: -15% (160 → 136)
 const BOLT_GRAVITY := 0.0
 const SHOOT_CD := 5.0      # V0.4 punto 8 (×2)
 const DETECT_RANGE := 75.0 # V0.4 punto 8 (−50%)
@@ -18,7 +18,7 @@ const DETECT_RANGE := 75.0 # V0.4 punto 8 (−50%)
 const STUCK_WINDOW := 0.5
 const STUCK_MIN_PROGRESS := 8.0
 const UNSTUCK_DURATION := 0.6   # V0.8.7.2: 0.3 → 0.6 (más tiempo de desbloqueo perpendicular)
-const UNSTUCK_SPEED := 40.0
+const UNSTUCK_SPEED := 34.0      # V0.8.7.4: -15% (40 → 34)
 
 var _shoot_cd := 2.0
 var _t := 0.0

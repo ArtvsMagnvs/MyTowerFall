@@ -42,9 +42,9 @@ var is_dead := false
 var frozen := false
 
 # Munición universal de proyectiles
-var ammo: int = 3
+var ammo: int = 1   # V0.8.7.4: default 3 → 1 (consistente con AMMO_START)
 const AMMO_MAX := 5
-const AMMO_START := 3
+const AMMO_START := 1   # V0.8.7.4: 3 → 1 (al revivir se obtiene solo 1 flecha)
 
 # Vidas (modo Versus) — V0.2 punto 11
 var lives := 4
@@ -715,6 +715,8 @@ func _spawn_death_particles() -> void:
 		tw.chain().tween_callback(p.queue_free)
 
 ## Reaparición con invulnerabilidad/parpadeo y onda expansiva (V0.2 punto 11).
+## V0.8.7.4: aplica un efecto "flotando" durante la onda expansiva (sutil Y offset + brillo)
+## como placeholder de la animación única que llegará con el pixel art.
 func respawn(at: Vector2) -> void:
 	global_position = at
 	is_dead = false
@@ -731,6 +733,21 @@ func respawn(at: Vector2) -> void:
 	_invuln = SPAWN_INVULN_DURATION
 	set_physics_process(true)
 	_spawn_shockwave()
+	_play_floating_vfx()    # V0.8.7.4: pose "flotando" durante la onda expansiva
+
+## V0.8.7.4: tween "flotando" — leve Y offset hacia arriba + brillo pulsante durante la onda
+## expansiva (≈0.12s) y un poco más. Placeholder hasta pixel art.
+## La animación única de "flotando" debería reemplazar este tween.
+func _play_floating_vfx() -> void:
+	if _visual == null:
+		return
+	var tw := _visual.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(_visual, "position:y", -2.0, 0.12).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_visual, "modulate", Color(1.5, 1.5, 1.5, 1.0), 0.12)
+	# Vuelve a la posición original con un fade del brillo tras la onda.
+	tw.chain().tween_property(_visual, "position:y", 0.0, 0.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_visual, "modulate", Color.WHITE, 0.4)
 
 func _spawn_shockwave() -> void:
 	# Onda expansiva 3×3 casillas que mata a quien esté cerca al aparecer.

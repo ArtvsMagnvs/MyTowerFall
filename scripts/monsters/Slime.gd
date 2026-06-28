@@ -14,12 +14,12 @@ class_name Slime
 
 enum G { PATROL, CHASE, WINDUP, AIRBORNE, LAND }
 
-const PATROL_SPEED := 15.0   # V0.5 punto 4 (÷2)
-const CHASE_SPEED := 30.0    # V0.5 punto 4 (÷2)
+const PATROL_SPEED := 13.0   # V0.8.7.4: -15% (15 → 13) para pacing TowerFall
+const CHASE_SPEED := 26.0    # V0.8.7.4: -15% (30 → 26)
 const DETECT := 80.0
-const JUMP_VY := -50.0       # V0.8.2 A-4: impulso ÷2 (salto más alto y flotante con g=112)
-const JUMP_VX := 30.0        # V0.8.2 A-3: igualado a CHASE_SPEED (sin "acelerón" al saltar)
-const SLIME_GRAVITY := 112.0 # V0.8.2 A-4: gravedad propia reducida para altura ×2
+const JUMP_VY := -43.0       # V0.8.7.4: -15% (-50 → -43)
+const JUMP_VX := 26.0        # V0.8.7.4: -15% (30 → 26) — sigue igualado a CHASE_SPEED
+const SLIME_GRAVITY := 95.0  # V0.8.7.4: -15% (112 → 95) — escala con JUMP_VY para mantener el ratio
 const WINDUP_T := 0.2
 const LAND_T := 0.4
 # V0.8.7.3: tolerancia vertical de "misma plataforma". El Slime solo persigue si el jugador

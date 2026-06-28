@@ -12,8 +12,8 @@ class_name ShadowBat
 
 enum BState { FLYING, TRACKING, PREPARING_DASH, DASHING, RECOVERING }
 
-const FLY_SPEED := 50.0
-const DASH_SPEED := 240.0          # igual que el jugador
+const FLY_SPEED := 43.0            # V0.8.7.4: -15% (50 → 43)
+const DASH_SPEED := 204.0          # V0.8.7.4: -15% (240 → 204); igual que el jugador
 const DASH_DURATION := 0.12        # igual que el jugador → distancia ≈ 28.8px
 const DASH_COOLDOWN_MIN := 1.5
 const DASH_COOLDOWN_MAX := 3.0
@@ -26,8 +26,8 @@ const RECOVER_T := 0.4
 const STUCK_WINDOW := 0.6
 const STUCK_MIN_PROGRESS := 12.0
 const UNSTUCK_DURATION := 0.6   # V0.8.7.2: 0.4 → 0.6 (más tiempo de desbloqueo)
-const UNSTUCK_SPEED := 60.0
-const DASH_DISTANCE := DASH_SPEED * DASH_DURATION   # ≈28.8px
+const UNSTUCK_SPEED := 51.0       # V0.8.7.4: -15% (60 → 51)
+const DASH_DISTANCE := DASH_SPEED * DASH_DURATION   # ≈24.5px (V0.8.7.4: DASH_SPEED ×0.85)
 # V0.8.7.2: gate de LoS en TRACKING — si llevamos más de este tiempo sin línea de visión
 # al jugador (hay plataforma/escenario en medio), abandonamos el tracking y volvemos a FLYING.
 const NO_LOS_THRESHOLD := 0.5

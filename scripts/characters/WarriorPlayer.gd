@@ -9,7 +9,7 @@ const SWORD_RANGE := 28.0
 const SWORD_THICK := 12.0
 const SWORD_CD := 0.25
 const CHARGE_MIN := 0.4
-const CHARGE_SPEED := 500.0
+const CHARGE_SPEED := 425.0       # V0.8.7.4: -15% (500 → 425)
 const CHARGE_MAX_DIST := 120.0
 const STUN_TIME := 0.2
 
