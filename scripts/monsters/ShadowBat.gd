@@ -5,7 +5,10 @@ class_name ShadowBat
 ## un dash de 8 direcciones a la misma distancia que el dash del jugador (≈29px). No
 ## atraviesa geometría (move_and_slide). Vulnerable a flecha/espada/stomp. ★★★
 ## V0.8.6: anti-stuck (desbloqueo perpendicular), PREPARING_DASH 0.15s, LoS reforzado.
-## Autor: Claude Code · Versión: 0.8.7
+## V0.8.7.2: gate de LoS en TRACKING (abandona el tracking si no hay LoS y vuelve a FLYING),
+## unstuck vertical cuando el jugador está sobre todo arriba/abajo (el perpendicular no sacaba
+## al Bat de debajo de la plataforma), más tiempo de unstuck.
+## Autor: Claude Code · Versión: 0.8.7.2
 
 enum BState { FLYING, TRACKING, PREPARING_DASH, DASHING, RECOVERING }
 
@@ -22,9 +25,12 @@ const RECOVER_T := 0.4
 # V0.8.6.1: anti-stuck por PROGRESO real + LoS (desbloqueo perpendicular en TRACKING).
 const STUCK_WINDOW := 0.6
 const STUCK_MIN_PROGRESS := 12.0
-const UNSTUCK_DURATION := 0.4
+const UNSTUCK_DURATION := 0.6   # V0.8.7.2: 0.4 → 0.6 (más tiempo de desbloqueo)
 const UNSTUCK_SPEED := 60.0
 const DASH_DISTANCE := DASH_SPEED * DASH_DURATION   # ≈28.8px
+# V0.8.7.2: gate de LoS en TRACKING — si llevamos más de este tiempo sin línea de visión
+# al jugador (hay plataforma/escenario en medio), abandonamos el tracking y volvemos a FLYING.
+const NO_LOS_THRESHOLD := 0.5
 
 var _state: BState = BState.FLYING
 var _home := Vector2.ZERO
@@ -35,6 +41,7 @@ var _t := 0.0
 var _dash_dir := Vector2.RIGHT
 var _unstuck_dir := Vector2.ZERO
 var _unstuck_timer := 0.0
+var _no_los_t := 0.0   # V0.8.7.2: tiempo acumulado sin LoS al jugador en TRACKING
 
 func _ready() -> void:
 	body_size = Vector2(16, 12)
@@ -71,10 +78,13 @@ func _flying(_delta: float) -> void:
 	var target_y := _home.y + sin(_t * 3.0) * 14.0
 	velocity.y = (target_y - global_position.y) * 3.0
 	var p := get_nearest_player()
-	if p != null and global_position.distance_to(p.global_position) < DETECTION_RANGE:
+	# V0.8.7.2: solo re-entrar en TRACKING si hay línea de visión directa al jugador (sin
+	# paredes/escenario/plataformas en medio). Si no, seguir volando en FLYING.
+	if p != null and global_position.distance_to(p.global_position) < DETECTION_RANGE and has_clear_los(p):
 		_state = BState.TRACKING
 		_cooldown = randf_range(DASH_COOLDOWN_MIN, DASH_COOLDOWN_MAX)
 		_unstuck_timer = 0.0
+		_no_los_t = 0.0
 		reset_stuck()
 
 func _tracking(delta: float) -> void:
@@ -83,21 +93,43 @@ func _tracking(delta: float) -> void:
 	if p == null or global_position.distance_to(p.global_position) > DETECTION_RANGE * 1.5:
 		_home = global_position
 		_unstuck_timer = 0.0
+		_no_los_t = 0.0
 		reset_stuck()
 		_state = BState.FLYING
 		return
 	var to_p := p.global_position - global_position
 	# Movimiento de desbloqueo activo → reposicionamiento puro (sin dash ni LoS).
 	if _unstuck_timer > 0.0:
+		_no_los_t = 0.0   # V0.8.7.2: el timer de LoS no acumula durante el unstuck
 		velocity = _unstuck_dir * UNSTUCK_SPEED
 		_unstuck_timer -= delta
 		return
+	# V0.8.7.2: gate de LoS. Si llevamos >NO_LOS_THRESHOLD sin línea de visión al jugador
+	# (hay plataforma/escenario en medio y no podemos alcanzarlo) → abandonamos TRACKING
+	# y volvemos a FLYING. Evitamos el bucle de "orbitar sin avanzar + intentar cargar dash
+	# contra plataforma".
+	if not has_clear_los(p):
+		_no_los_t += delta
+		if _no_los_t > NO_LOS_THRESHOLD:
+			_home = global_position
+			_unstuck_timer = 0.0
+			_no_los_t = 0.0
+			_state = BState.FLYING
+			return
+	else:
+		_no_los_t = 0.0
 	# Anti-stuck (V0.8.6.1): por progreso real + LoS. Si no avanza Y hay geometría entre el Bat
 	# y el jugador (no puede alcanzarlo) → desbloqueo perpendicular (no dash).
 	if is_stuck_no_los(delta, p, STUCK_WINDOW, STUCK_MIN_PROGRESS):
-		var s := 1.0 if randf() > 0.5 else -1.0
+		# V0.8.7.2: si el jugador está sobre todo arriba/abajo, el perpendicular no saca al
+		# Bat de debajo de la plataforma (queda horizontal). Usamos dirección opuesta al
+		# jugador (alejarse) en ese caso.
 		var base := to_p if to_p.length() > 1.0 else Vector2.RIGHT
-		_unstuck_dir = base.rotated(s * PI * 0.5).normalized()
+		if absf(to_p.y) > absf(to_p.x) * 1.5:
+			_unstuck_dir = Vector2(0, -signf(to_p.y))
+		else:
+			var s := 1.0 if randf() > 0.5 else -1.0
+			_unstuck_dir = base.rotated(s * PI * 0.5).normalized()
 		_unstuck_timer = UNSTUCK_DURATION
 		velocity = _unstuck_dir * UNSTUCK_SPEED
 		return

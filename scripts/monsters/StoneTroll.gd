@@ -4,7 +4,9 @@ class_name StoneTroll
 ## de plataformas). Puñetazo a corto rango (hitbox visible, solo en sus frames activos)
 ## y pedrusco con windup si el jugador está por encima. Stompable. ★★☆
 ## V0.8.6: anti-stuck (bloqueo de patrulla cuando se atasca en CHASE).
-## Autor: Claude Code · Versión: 0.8.7
+## V0.8.7.2: gate de LoS en chase (no persigue si hay geometría en medio) + más tiempo de
+## patrulla forzada para que el Troll se aleje antes de re-perseguir.
+## Autor: Claude Code · Versión: 0.8.7.2
 
 const PATROL_SPEED := 20.0
 const CHASE_SPEED := 35.0      # V0.4 p.1b
@@ -23,7 +25,10 @@ const WINDUP_T := 0.4
 # un jugador inalcanzable con geometría en medio). NO acumula en patrulla ni atacando.
 const STUCK_WINDOW := 0.6
 const STUCK_MIN_PROGRESS := 10.0
-const STUCK_PATROL_T := 1.5
+const STUCK_PATROL_T := 2.5   # V0.8.7.2: 1.5 → 2.5 (más tiempo para alejarse del radio de detección)
+# V0.8.7.2: gate de LoS en chase — si llevamos más de este tiempo sin línea de visión al
+# jugador (hay plataforma/escenario en medio y no podemos alcanzarlo), salimos del chase.
+const NO_LOS_THRESHOLD := 0.5
 
 var _dir := 1
 var _punch_cd := 0.0
@@ -31,6 +36,7 @@ var _rock_cd := 1.5
 var _state := "patrol"   # patrol | chase | windup | punch_windup | punch
 var _timer := 0.0
 var _patrol_lock := 0.0
+var _no_los_t := 0.0   # V0.8.7.2: tiempo acumulado sin LoS al jugador en chase
 
 func _ready() -> void:
 	body_size = Vector2(20, 22)
@@ -57,6 +63,7 @@ func _ai(delta: float) -> void:
 	is_attack_active = false
 	# V0.8.6 P1B: durante el bloqueo anti-stuck, patrulla forzada (no re-persigue) para circular.
 	if _patrol_lock > 0.0:
+		_no_los_t = 0.0   # V0.8.7.2: reset del timer de LoS mientras dura el lock
 		reset_stuck()
 		if is_on_wall():
 			_dir = -_dir
@@ -66,6 +73,19 @@ func _ai(delta: float) -> void:
 	if p != null and global_position.distance_to(p.global_position) < DETECTION_RANGE:
 		var dx := p.global_position.x - global_position.x
 		var dy := p.global_position.y - global_position.y
+		# V0.8.7.2: gate de LoS. Si llevamos >NO_LOS_THRESHOLD sin línea de visión al
+		# jugador (hay plataforma/escenario en medio y no podemos alcanzarlo) → salimos
+		# del chase con patrulla forzada, sin re-perseguir hasta tener LoS clara.
+		if not has_clear_los(p):
+			_no_los_t += delta
+			if _no_los_t > NO_LOS_THRESHOLD:
+				_no_los_t = 0.0
+				_patrol_lock = STUCK_PATROL_T
+				_dir = -_dir   # alejarse del jugador
+				velocity.x = _dir * PATROL_SPEED
+				return
+		else:
+			_no_los_t = 0.0
 		# Pedrusco solo si el jugador está por encima Y hay línea de visión (no a través de geometría).
 		if dy < -10.0 and absf(dx) < 100.0 and _rock_cd <= 0.0 and has_clear_los(p):
 			_state = "windup"
@@ -88,6 +108,7 @@ func _ai(delta: float) -> void:
 		_dir = 1 if dx >= 0.0 else -1
 		velocity.x = _dir * CHASE_SPEED
 		return
+	_no_los_t = 0.0
 	reset_stuck()
 	# Patrulla lenta cuando el jugador está lejos; gira en paredes sólidas.
 	if is_on_wall():

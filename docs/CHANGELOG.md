@@ -4,6 +4,43 @@ Formato: [SemVer](https://semver.org/) — MAJOR.MINOR.PATCH
 
 ---
 
+## [0.8.7.2] — 2026-06-28 — Gate de LoS en CHASE/TRACKING + más tiempo de unstuck
+V0.8.7 (progreso+LoS) corregía el "clavado indefinido" pero dejaba un bucle feo: el monstruo
+camina ~25 px hacia el jugador → entra en CHASE → choca con la base de la plataforma →
+unstuck 1.5s → vuelve a entrar en CHASE → repite. El jugador lo percibía como "clavado"
+aunque técnicamente avanzara. Además el unstuck perpendicular del Murciélago no servía
+cuando el jugador estaba justo encima/debajo (quedaba horizontal y no lo sacaba de debajo
+de la plataforma).
+
+### Solución 1 — Más tiempo de unstuck (solución "cinturón")
+- **Slime / Troll:** `STUCK_PATROL_T` 1.5s → **2.5s** (más tiempo de patrulla forzada
+  alejándose antes de re-perseguir).
+- **Espectro / Murciélago:** `UNSTUCK_DURATION` 0.3/0.4s → **0.6s** (más tiempo de
+  desbloqueo perpendicular).
+
+### Solución 2 — Gate de LoS en CHASE/TRACKING (solución "de raíz")
+Si el monstruo lleva **>0.5s sin línea de visión** al jugador (hay plataforma, suelo o
+estructura en medio y no puede alcanzarlo), abandona la persecución y vuelve a PATROL
+(o FLYING). La persecución solo se reanuda cuando vuelve a haber LoS directa.
+- **Slime / Troll / Murciélago:** nuevo `_no_los_t` y `NO_LOS_THRESHOLD = 0.5s`; en CHASE
+  (o TRACKING) el monstruo sale del estado si acumula >0.5s sin LoS. En PATROL (o FLYING)
+  ya no re-entra en CHASE/TRACKING si no hay LoS.
+- **Espectro:** la misma lógica pero aplicada al **disparo** (no dispara si no hay LoS).
+- **Murciélago (extra):** unstuck vertical cuando el jugador está sobre todo arriba/abajo
+  (`absf(to_p.y) > absf(to_p.x) * 1.5`) — antes el perpendicular lo dejaba horizontal y no
+  lo sacaba de debajo de la plataforma.
+
+### Aplicado también al Slime y al Espectro
+El usuario mencionó "Troll y Murciélago" para la Solución 2; la misma lógica se aplicó al
+Slime (mismo bucle) y al Espectro (disparaba a través de paredes). Constantes y
+velocidades de los monstruos intactas (sin cambios de `CHASE_SPEED`, `PATROL_SPEED`,
+`FLY_SPEED`, `DETECT`, `DETECTION_RANGE` ni nada de `PlayerStats.tres`).
+
+### Tests
+- `V086bTest` actualizado: F y G ahora aceptan como respuesta anti-stuck válida tanto el
+  unstuck perpendicular como la vuelta a FLYING (gate de LoS). E sigue verificando que el
+  Troll patrulla y se mueve. **Suite headless completa: 50+ asserts, 0 fallos, 0 regresiones**.
+
 ## [0.8.7] — 2026-06-27 — HOTFIX anti-stuck (progreso real + LoS) y dash del Murciélago
 El anti-stuck de V0.8.6 (basado en VELOCIDAD) no cubría dos casos reportados: monstruos que
 **oscilan en el sitio** (velocidad alta, desplazamiento neto ~0) bajo/sobre un jugador

@@ -69,27 +69,34 @@ func _troll_under_elevated() -> bool:
 	return ok
 
 ## Bat y jugador en lados opuestos de una plataforma horizontal ancha. Verifica que el Bat
-## NUNCA carga el dash sin LoS limpia ni con el camino del dash bloqueado, y que se desbloquea.
+## NUNCA carga el dash sin LoS limpia ni con el camino del dash bloqueado, y que responde al
+## anti-stuck (ya sea con unstuck perpendicular o volviendo a FLYING, ambos son válidos en V0.8.7.2).
 func _bat_platform_between(bat_pos: Vector2, player_pos: Vector2) -> bool:
 	var plat := _make_wall(Vector2(160, 100), Vector2(120, 6))   # plataforma ancha x[100,220]
 	var bat := await _spawn("res://scenes/monsters/ShadowBat.tscn", bat_pos) as ShadowBat
 	var pl := await _frozen_player(player_pos)
 	var bad_charge := false   # cargar/preparar dash sin LoS al jugador
 	var bad_path := false     # preparar dash con el camino snappeado bloqueado
-	var saw_unstuck := false
+	# V0.8.7.2: el anti-stuck del Bat puede ser unstuck perpendicular O vuelta a FLYING
+	# (gate de LoS). Aceptamos cualquiera de los dos como respuesta válida.
+	var saw_anti_stuck := false
 	for i in 200:
 		await get_tree().physics_frame
 		if not is_instance_valid(bat): break
+		# V0.8.7.2: si el Bat está en FLYING (porque el gate de LoS de V0.8.7.2 bloqueó
+		# la entrada a TRACKING), forzarlo a TRACKING para probar también el gate interno.
+		if bat._state == ShadowBat.BState.FLYING:
+			bat._state = ShadowBat.BState.TRACKING
 		if bat._state == ShadowBat.BState.TRACKING:
 			bat._cooldown = 0.0   # forzar intento de dash en cada frame: solo lo frena el LoS/camino
-		if bat._unstuck_timer > 0.0:
-			saw_unstuck = true
+		if bat._unstuck_timer > 0.0 or bat._state == ShadowBat.BState.FLYING:
+			saw_anti_stuck = true
 		if bat._state == ShadowBat.BState.PREPARING_DASH:
 			if not bat.has_clear_los(pl):
 				bad_charge = true
 			if bat.path_blocked(bat._dash_dir, ShadowBat.DASH_DISTANCE + 4.0):
 				bad_path = true
-	var ok := (not bad_charge) and (not bad_path) and saw_unstuck
+	var ok := (not bad_charge) and (not bad_path) and saw_anti_stuck
 	if is_instance_valid(bat): bat.queue_free()
 	if is_instance_valid(pl): pl.queue_free()
 	if is_instance_valid(plat): plat.queue_free()

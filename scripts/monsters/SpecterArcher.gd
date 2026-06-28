@@ -4,7 +4,9 @@ class_name SpecterArcher
 ## 90-120px, retrocede si el jugador se acerca, dispara un proyectil espectral recto
 ## con leve aim-ahead. No atraviesa geometría. No stompable. Contacto = rebote. ★★☆
 ## V0.8.6: anti-stuck (desbloqueo perpendicular cuando se atasca contra geometría).
-## Autor: Claude Code · Versión: 0.8.7
+## V0.8.7.2: gate de LoS en shoot (no dispara a través de paredes/escenario) + más tiempo
+## de desbloqueo perpendicular para alejarse antes de re-intentar.
+## Autor: Claude Code · Versión: 0.8.7.2
 
 const FLY_SPEED := 70.0
 const BOLT_SPEED := 160.0
@@ -15,7 +17,7 @@ const DETECT_RANGE := 75.0 # V0.4 punto 8 (−50%)
 # V0.8.6.1 anti-stuck por PROGRESO real + LoS (desbloqueo perpendicular).
 const STUCK_WINDOW := 0.5
 const STUCK_MIN_PROGRESS := 8.0
-const UNSTUCK_DURATION := 0.3
+const UNSTUCK_DURATION := 0.6   # V0.8.7.2: 0.3 → 0.6 (más tiempo de desbloqueo perpendicular)
 const UNSTUCK_SPEED := 40.0
 
 var _shoot_cd := 2.0
@@ -76,7 +78,9 @@ func _ai(delta: float) -> void:
 		elif dist > DETECT_RANGE - 10.0:
 			desired = to_p.normalized() * 45.0            # acercarse para entrar en rango
 		_shoot_cd -= delta
-		if _shoot_cd <= 0.0 and dist <= DETECT_RANGE:
+		# V0.8.7.2: gate de LoS en shoot — solo dispara si hay línea de visión directa al
+		# jugador (sin paredes/escenario/plataformas en medio).
+		if _shoot_cd <= 0.0 and dist <= DETECT_RANGE and has_clear_los(p):
 			_shoot(p)
 			_shoot_cd = SHOOT_CD
 	velocity = velocity.lerp(desired.limit_length(FLY_SPEED), 0.08)

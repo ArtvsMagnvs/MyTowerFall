@@ -5,7 +5,9 @@ class_name Slime
 ## persiguiendo al jugador (V0.4 p.2). El salto es el ataque: letal solo al caer.
 ## Stomp posible siempre. ★☆☆
 ## V0.8.6: anti-stuck (bloqueo de patrulla cuando se atasca en CHASE).
-## Autor: Claude Code · Versión: 0.8.7
+## V0.8.7.2: gate de LoS en CHASE (no persigue si hay geometría en medio) + más tiempo de
+## patrulla forzada para que el Slime se aleje del jugador antes de re-perseguir.
+## Autor: Claude Code · Versión: 0.8.7.2
 
 enum G { PATROL, CHASE, WINDUP, AIRBORNE, LAND }
 
@@ -22,12 +24,16 @@ const LAND_T := 0.4
 # el sitio bajo un jugador inalcanzable) + gate de LoS (solo circula si hay geometría en medio).
 const STUCK_WINDOW := 0.6
 const STUCK_MIN_PROGRESS := 10.0
-const STUCK_PATROL_T := 1.5
+const STUCK_PATROL_T := 2.5   # V0.8.7.2: 1.5 → 2.5 (más tiempo para alejarse del radio de detección)
+# V0.8.7.2: gate de LoS en CHASE — si llevamos más de este tiempo sin línea de visión al
+# jugador (hay plataforma/escenario en medio y no podemos alcanzarlo), volvemos a PATROL.
+const NO_LOS_THRESHOLD := 0.5
 
 var _state: G = G.PATROL
 var _dir := 1
 var _timer := 0.0
 var _patrol_lock := 0.0
+var _no_los_t := 0.0   # V0.8.7.2: tiempo acumulado sin LoS al jugador en CHASE
 
 func _ready() -> void:
 	body_size = Vector2(10, 12)
@@ -56,18 +62,37 @@ func _patrol() -> void:
 	velocity.x = _dir * PATROL_SPEED
 	# Durante el bloqueo anti-stuck NO se re-persigue: patrulla para alejarse y circular.
 	if _patrol_lock > 0.0:
+		_no_los_t = 0.0   # V0.8.7.2: reset del timer de LoS mientras dura el lock
 		return
 	var p := get_nearest_player()
-	if p != null and absf(p.global_position.x - global_position.x) < DETECT:
+	# V0.8.7.2: solo re-perseguir si hay LoS directa (sin paredes/escenario en medio). Si no,
+	# seguir patrullando hasta tener línea de visión clara.
+	if p != null and absf(p.global_position.x - global_position.x) < DETECT and has_clear_los(p):
 		_state = G.CHASE
+		_no_los_t = 0.0
 		reset_stuck()   # ventana fresca al empezar a perseguir
 
 func _chase(delta: float) -> void:
 	is_attack_active = false
 	var p := get_nearest_player()
 	if p == null:
+		_no_los_t = 0.0
 		_state = G.PATROL
 		return
+	# V0.8.7.2: gate de LoS. Si llevamos >NO_LOS_THRESHOLD sin línea de visión al jugador
+	# (hay plataforma/escenario en medio y no podemos alcanzarlo) → volver a PATROL con
+	# bloqueo para no re-perseguir inmediatamente.
+	if not has_clear_los(p):
+		_no_los_t += delta
+		if _no_los_t > NO_LOS_THRESHOLD:
+			_no_los_t = 0.0
+			_patrol_lock = STUCK_PATROL_T
+			_dir = -_dir   # alejarse del jugador
+			velocity.x = _dir * PATROL_SPEED
+			_state = G.PATROL
+			return
+	else:
+		_no_los_t = 0.0
 	# Anti-stuck (V0.8.6.1): por progreso real + LoS. Si no avanza Y hay geometría entre el
 	# Slime y el jugador (no puede alcanzarlo) → patrulla forzada para circular.
 	if is_stuck_no_los(delta, p, STUCK_WINDOW, STUCK_MIN_PROGRESS):

@@ -25,6 +25,24 @@ Fecha cierre:
 ## Bugs cerrados
 
 ---
+ID: BUG-036  ·  Estado: CERRADO  ·  Severidad: ALTO  ·  Cierre: 2026-06-28 (V0.8.7.2)
+Descripción: Los monstruos (Troll, Slime, Murciélago) entraban en un bucle "clavado-cíclico" cuando
+  el jugador estaba sobre una plataforma/estructura con geometría en medio: caminaban unos px hacia
+  el jugador, chocaban con la base de la plataforma, unstuck 1.5s, re-perseguían, chocaban, etc.
+  El anti-stuck de V0.8.7 (progreso+LoS) resolvía el "clavado indefinido" pero no este bucle.
+  Adicionalmente el Murciélago, con unstuck perpendicular, no salía de debajo de la plataforma
+  cuando el jugador estaba en vertical (el perpendicular quedaba horizontal).
+Causa raíz: la lógica anti-stuck solo aplicaba el unstuck cuando se detectaba el atasco físico
+  (progreso cero); no había un gate de LoS en la decisión de "perseguir", solo en la de "atacar".
+  Resultado: si el monstruo avanzaba un poco antes de chocar, el anti-stuck nunca se disparaba
+  y el bucle persistía.
+Fix: Solución 1 — `STUCK_PATROL_T` 1.5 → 2.5s (Slime, Troll), `UNSTUCK_DURATION` 0.3/0.4 → 0.6s
+  (Espectro, Murciélago). Solución 2 — nuevo gate de LoS en CHASE/TRACKING: si el monstruo
+  acumula >0.5s sin LoS al jugador, sale del estado y vuelve a PATROL/FLYING; no re-engage hasta
+  tener LoS directa. Murciélago extra: unstuck vertical cuando el jugador está sobre todo
+  arriba/abajo. Aplicado también a Slime (mismo bucle) y al disparo del Espectro (disparaba a
+  través de paredes). Verificado: V086bTest actualizado (E/F/G PASS), suite completa sin regresiones.
+---
 ID: BUG-035  ·  Estado: CERRADO  ·  Severidad: ALTO  ·  Cierre: 2026-06-27 (V0.8.7)
 Descripción: El Murciélago se quedaba "clavado" cargando el dash cuando había una plataforma entre él y el jugador.
 Causa raíz: el LoS comprobaba el ángulo EXACTO al jugador, pero el dash va en dirección snappeada a 8; si diferían, el dash chocaba contra la plataforma (bucle PREPARING→DASHING→RECOVERING).

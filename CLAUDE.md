@@ -24,8 +24,8 @@ Actualizar las secciones relevantes cuando se tomen nuevas decisiones o cambie e
 
 ## ESTADO ACTUAL
 
-**Versión en `project.godot`:** 0.8.7
-**Última versión del CHANGELOG:** 0.8.7 (2026-06-27) — HOTFIX anti-stuck (progreso real + LoS) y dash del Murciélago sin línea de visión
+**Versión en `project.godot`:** 0.8.7.2
+**Última versión del CHANGELOG:** 0.8.7.2 (2026-06-28) — Gate de LoS en CHASE/TRACKING + más tiempo de unstuck (sin "clavado-cíclico")
 **Fase de desarrollo:** Mecánicas de juego terminadas. Arte en placeholder geométrico. Audio API lista, sin assets.
 **Siguiente tarea documentada:** Continuar en 0.8.x con ajustes de mecánicas hasta cerrar en 0.9.0.
 
@@ -42,7 +42,7 @@ Actualizar las secciones relevantes cuando se tomen nuevas decisiones o cambie e
 - HUD con paneles laterales de 40px
 - Menús: MainMenu, CharacterSelect, OptionsMenu con remapeo de controles
 - Autoloads: VersionManager, ScreenWrapper, DebugManager, InputManager, AudioManager, GameManager, SceneManager
-- Suite de tests headless: SmokeTest, MonsterTest, StompTest, IntegrationTest, V03Test, V04Test, V05Test, V051Test, V082Test (B-1/B-2), V083Test (dash atraviesa/wall slide/stomp Troll/cadáver), V083fixTest (stomp descentrado/en movimiento + wall slide al soltar input), V084Test (wall slide sin air-slide), V084uiTest (navegación de menús sin crash), V086Test (anti-stuck 4 monstruos + LoS Bat), V086bTest (anti-stuck encima/debajo con plataforma en medio + Bat no carga dash sin LoS), FWaveTest (portales/mini-oleadas N1)
+- Suite de tests headless: SmokeTest, MonsterTest, StompTest, IntegrationTest, V03Test, V04Test, V05Test, V051Test, V082Test (B-1/B-2), V083Test (dash atraviesa/wall slide/stomp Troll/cadáver), V083fixTest (stomp descentrado/en movimiento + wall slide al soltar input), V084Test (wall slide sin air-slide), V084uiTest (navegación de menús sin crash), V086Test (anti-stuck 4 monstruos + LoS Bat), V086bTest (anti-stuck encima/debajo con plataforma en medio + Bat no carga dash sin LoS + V0.8.7.2 gate de LoS en TRACKING), FWaveTest (portales/mini-oleadas N1)
 
 ### Qué está pendiente (no implementado)
 - Arte pixel art (todos los sprites son placeholders geométricos)
@@ -209,7 +209,7 @@ proj_gravity   = 200.0  px/s²
 ### Reglas universales de monstruos
 - **Un golpe = muere.** Sin barra de vida.
 - **Ningún monstruo atraviesa ninguna geometría.** `collision_mask` incluye siempre `L_WORLD`.
-- **Anti-stuck (V0.8.6 + reescrito V0.8.7):** ningún monstruo se queda inmóvil ante un jugador inalcanzable. **Detección por PROGRESO real + LoS** (en `MonsterBase.is_stuck_no_los`): cada 0.5–0.6s mide el desplazamiento NETO; se considera atascado solo si NO avanzó **Y** NO hay línea de visión al jugador (`has_clear_los`, rayo `L_WORLD` compartido) = hay geometría en medio y no puede atacar. Esto detecta la **oscilación en el sitio** (velocidad alta, avance ~0) que la detección por velocidad de V0.8.6 no veía. Terrestres (Slime/Troll) → **bloqueo de patrulla** 1.5s (`_patrol_lock`, gira y se aleja → circula con el wrapping). Voladores (Bat/Specter) → **desbloqueo perpendicular** (`_unstuck_timer`/`_unstuck_dir`). NO acumula patrullando ni atacando (`reset_stuck`). El pedrusco del Troll exige `has_clear_los` (no atraviesa plataformas).
+- **Anti-stuck (V0.8.6 + reescrito V0.8.7 + V0.8.7.2):** ningún monstruo se queda inmóvil ni entra en bucle "clavado-cíclico" ante un jugador inalcanzable. **Detección por PROGRESO real + LoS** (en `MonsterBase.is_stuck_no_los`): cada 0.5–0.6s mide el desplazamiento NETO; se considera atascado solo si NO avanzó **Y** NO hay línea de visión al jugador (`has_clear_los`, rayo `L_WORLD` compartido) = hay geometría en medio y no puede atacar. Esto detecta la **oscilación en el sitio** (velocidad alta, avance ~0) que la detección por velocidad de V0.8.6 no veía. **V0.8.7.2 añade:** gate de LoS en CHASE/TRACKING (si un monstruo acumula >0.5s sin LoS al jugador, sale del estado y vuelve a PATROL/FLYING, y no re-engage hasta tener LoS directa). Terrestres (Slime/Troll) → **bloqueo de patrulla** 2.5s (`_patrol_lock`, gira y se aleja → circula con el wrapping). Voladores (Bat/Specter) → **desbloqueo perpendicular** 0.6s (`_unstuck_timer`/`_unstuck_dir`; el Bat usa dirección vertical cuando el jugador está sobre todo arriba/abajo). NO acumula patrullando ni atacando (`reset_stuck`). El pedrusco del Troll exige `has_clear_los` (no atraviesa plataformas). El disparo del Espectro exige `has_clear_los` (no dispara a través de paredes).
 - El contacto lateral/inferior solo mata si `is_attack_active = true`. Si no, aplica un rebote suave sin daño.
 - `MonsterBase` implementa: hurtbox, stomp hitbox, contact area, ghost sprite wrap, name label, `receive_stomp()`, `die()`.
 
