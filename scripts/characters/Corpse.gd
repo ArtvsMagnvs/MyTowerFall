@@ -3,11 +3,7 @@ class_name Corpse
 ## Corpse — Cuerpo muerto que sale despedido por el impulso del impacto
 ## (efecto TowerFall, V0.2 puntos 9/10). Vuela con gravedad, choca con el mundo,
 ## puede llevar una flecha clavada recogible y se desvanece tras unos segundos.
-## V0.8.7.4: screen wrap vertical (igual que player/monstruo). Si el cadáver cae al vacío,
-## reaparece por arriba con la misma X en vez de eliminarse, para que la flecha que lleva
-## pueda seguir siendo recuperable. El comportamiento es el mismo tanto si murió por flecha,
-## espada o stomp: condición general.
-## Autor: Claude Code · Versión: 0.8.7.4
+## Autor: Claude Code · Versión: 0.5.0
 
 const L_WORLD := 1
 const L_PLAYER_HURT := 2
@@ -70,9 +66,6 @@ func _physics_process(delta: float) -> void:
 	_t += delta
 	velocity.y = minf(velocity.y + grav * delta, 600.0)
 	move_and_slide()
-	# V0.8.7.4: screen wrap vertical (misma mecánica que player/monstruo). Si el cadáver
-	# cae al vacío, reaparece por arriba con la misma X — la flecha sigue siendo recogible.
-	_update_wrap()
 	velocity.x = move_toward(velocity.x, 0.0, 120.0 * delta)  # fricción al rozar
 	if carries_arrow and _pickup != null:
 		_check_pickup()
@@ -82,15 +75,6 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 	elif remaining < 0.4:
 		modulate.a = remaining / 0.4
-
-## V0.8.7.4: screen wrap (mismo comportamiento que MonsterBase._update_wrap). Si el centro
-## del cadáver cruza un borde con zona de wrap vertical, reposiciona al otro lado.
-func _update_wrap() -> void:
-	var delta := ScreenWrapper.wrap_delta(global_position)
-	if delta != Vector2.ZERO:
-		global_position += delta
-		if delta.y != 0.0:
-			velocity.y *= 0.5               # damping al wrap vertical (consistente con MonsterBase)
 
 ## V0.3 punto 4 fase 3: al desaparecer el cadáver, la flecha queda clavada en el suelo.
 func _drop_stuck_arrow() -> void:

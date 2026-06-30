@@ -4,6 +4,6 @@
 
 [resource]
 script = ExtResource("1")
-initial_speed = 255.0
-cone_speed = 231.0
-proj_gravity = 170.0
+initial_speed = 300.0
+cone_speed = 272.0
+proj_gravity = 200.0

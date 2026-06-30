@@ -12,17 +12,17 @@ class_name StoneTroll
 ## plataformas, solo atacan si el jugador entra en su vecindad.
 ## Autor: Claude Code · Versión: 0.8.7.3
 
-const PATROL_SPEED := 17.0        # V0.8.7.4: -15% (20 → 17)
-const CHASE_SPEED := 30.0         # V0.8.7.4: -15% (35 → 30); V0.4 p.1b
-const DETECTION_RANGE := 150.0    # V0.4 p.1b
+const PATROL_SPEED := 20.0
+const CHASE_SPEED := 35.0      # V0.4 p.1b
+const DETECTION_RANGE := 150.0 # V0.4 p.1b
 const PUNCH_RANGE := 40.0
 const PUNCH_CD := 2.0
 const PUNCH_ACTIVE_T := 0.18
 const PUNCH_WINDUP_T := 0.7              # V0.8.2 A-5/C-2: anticipación visible del puñetazo
 const PUNCH_CANCEL_RANGE := PUNCH_RANGE * 2.5  # 100px: si el jugador se aleja, se cancela
 const ROCK_CD := 5.0
-const ROCK_SPEED := 136.0         # V0.8.7.4: -15% (160 → 136)
-const ROCK_GRAVITY := 153.0       # V0.8.7.4: -15% (180 → 153) — escala con ROCK_SPEED
+const ROCK_SPEED := 160.0
+const ROCK_GRAVITY := 180.0
 const WINDUP_T := 0.4
 # V0.8.7.3: tolerancia vertical de "misma plataforma". El Troll NO persigue si el jugador
 # está a más de esta distancia en Y. 14 px ≈ 1.4 tiles (el Troll no salta, solo anda).

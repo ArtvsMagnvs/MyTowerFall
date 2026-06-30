@@ -25,44 +25,6 @@ Fecha cierre:
 ## Bugs cerrados
 
 ---
-ID: BUG-040  ·  Estado: CERRADO  ·  Severidad: BAJO  ·  Cierre: 2026-06-28 (V0.8.7.4)
-Descripción: El Cadáver al caer al vacío se eliminaba por completo (junto con la flecha
-  que llevara clavada). Resultado: si un monstruo moría por flecha en el borde de una
-  plataforma alta y el cadáver caía al vacío, la flecha se perdía. El usuario tenía
-  que "pillar la flecha antes de que caiga al vacío" lo cual era frustrante.
-Causa raíz: `Corpse.gd` no tenía screen wrap vertical — `MonsterBase._update_wrap()`
-  sí lo tenía, pero el Corpse es una clase independiente (`extends CharacterBody2D`).
-Fix: añadido `_update_wrap()` al Corpse con la misma lógica que MonsterBase (usa
-  `ScreenWrapper.wrap_delta()` y damping 0.5 al wrap vertical). El comportamiento es
-  ahora idéntico al de un monstruo vivo cayendo: reaparece por arriba con la misma X.
-  Aplica a TODAS las causas de muerte (flecha, espada, stomp) — condición general.
-  Verificado: 16/16 tests PASS.
----
-ID: BUG-039  ·  Estado: CERRADO  ·  Severidad: BAJO  ·  Cierre: 2026-06-28 (V0.8.7.4)
-Descripción: Al revivir el jugador obtenía 3 flechas de golpe (`AMMO_START = 3`).
-  Demasiado castigo: un jugador que perdía el control de munición se encontraba
-  repentinamente con 3 flechas al respawnear, lo cual rompía el riesgo de "quedarse
-  sin recursos".
-Fix: `AMMO_START 3 → 1` y `ammo` default `3 → 1` en `PlayerBase.gd`. `AMMO_MAX = 5`
-  se mantiene (sigue siendo el tope al recoger flechas del suelo). Aplicado tanto al
-  spawn inicial como a cada `respawn()`. Verificado: 16/16 tests PASS.
----
-ID: BUG-038  ·  Estado: CERRADO  ·  Severidad: MEDIO  ·  Cierre: 2026-06-28 (V0.8.7.4)
-Descripción: El "feel" del juego era demasiado arcade-rápido comparado con TowerFall
-  (referencia de diseño). Jugador caminaba muy rápido, saltaba muy alto y se
-  reposicionaba casi instantáneamente. Las flechas también viajaban demasiado
-  rápido. El usuario quería ajustar el pacing sin tocar mecánicas.
-Causa raíz: las velocidades estaban calibradas en V0.5/V0.8.0 sin referencia
-  cuantitativa al pacing de TowerFall.
-Fix: reducción global del 15% a TODAS las velocidades (sin tocar tiempos, locks ni
-  distancias). Aplicado a `PlayerStats.tres` (walk, jump, dash, wall jump, stomp
-  bounce, ledge slide), `ArrowStats.tres` (initial_speed, cone_speed, proj_gravity),
-  Slime (PATROL/CHASE/JUMP_VY/JUMP_VX/SLIME_GRAVITY), Troll (PATROL/CHASE/ROCK_SPEED/
-  ROCK_GRAVITY), ShadowBat (FLY/DASH/UNSTUCK), SpecterArcher (FLY/BOLT/UNSTUCK),
-  WarriorPlayer (CHARGE). NO tocado: `gravity = 900` (afecta air-times
-  proporcionalmente), ni cooldowns/locks/dash_duration (son tiempos). Verificado:
-  16/16 tests PASS.
----
 ID: BUG-037  ·  Estado: CERRADO  ·  Severidad: BAJO  ·  Cierre: 2026-06-28 (V0.8.7.3)
 Descripción: Tras V0.8.7.2 el Troll ya no se quedaba clavado, pero seguía un patrón visible
   de "ping-pong": patrulla 2.5s, re-engage CHASE al ver al jugador asomado, choca, patrulla
