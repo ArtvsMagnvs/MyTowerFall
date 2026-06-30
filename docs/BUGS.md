@@ -300,28 +300,3 @@ Fecha apertura: AAAA-MM-DD
 Fecha cierre:
 ---
 ```
-
----
-ID: BUG-043  ·  Estado: CERRADO  ·  Severidad: MEDIO  ·  Cierre: 2026-06-28 (V0.8.7.4.2)
-Descripción: La nueva secuencia de respawn (V0.8.7.4) añadía una "mini-carga con rayos
-  eléctricos decorativos" de 0.5s entre el desvanecimiento de la gema y la onda
-  expansiva real. Visualmente eso REEMPLAZABA la onda: el jugador veía primero el
-  "remolino" de rayos brillantes durante 0.5s y la onda de 0.12s quedaba enterrada
-  debajo. Era ruido creativo mío no presente en el spec original del juego
-  (donde el respawn siempre fue "onda expansiva + blink").
-Reproducción:
-  1. Jugar Versus o Historia.
-  2. Morir una vez.
-  3. Observar la secuencia de respawn: lo que se ve es un anillo de 6 rayos
-     zigzagueantes rotando + un pulso amarillo, no la onda expansiva del spec.
-Causa raíz: `_play_mini_charge()` se introdujo como añadido en V0.8.7.4 sin estar
-  en el spec. Se lanzaba en paralelo con `player.respawn(target)` (el callback
-  del tween encadenaba ambos, no esperaba a que la mini-carga acabara), así que
-  durante los 0.5s de rayos la onda también estaba activa pero oculta debajo.
-Fix aplicado: V0.8.7.4.2 — eliminada la función `_play_mini_charge()` de
-  `scripts/ui/StoryMatch.gd` y `scripts/ui/VersusMatch.gd`. La gema se desvanece
-  y el callback encadena directamente con `player.respawn(target)`, así la onda
-  expansiva vuelve a ser el momento visual del respawn.
-Fecha apertura: 2026-06-28
-Fecha cierre: 2026-06-28
----

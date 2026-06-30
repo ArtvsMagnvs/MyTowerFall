@@ -4,40 +4,6 @@ Formato: [SemVer](https://semver.org/) — MAJOR.MINOR.PATCH
 
 ---
 
-## [0.8.7.4.2] — 2026-06-28 — Eliminar mini-carga con rayos en respawn (tapaba la onda)
-
-### Bug fix — El "remolino" V0.8.7.4 reemplazaba visualmente la onda expansiva
-**Síntoma:** la nueva secuencia de respawn (V0.8.7.4) añadía, entre el desvanecimiento
-de la gema y el respawn real del jugador, una **mini-carga de 0.5s con 6 rayos
-eléctricos zigzagueantes rotando + un pulso cuadrado amarillo**. Esa mini-carga corría
-EN PARALELO con la onda expansiva (no en serie), porque el callback `player.respawn(target)`
-del tween se ejecutaba inmediatamente después de lanzar `_play_mini_charge(target)` —
-no cuando la mini-carga terminaba. Resultado: el jugador veía primero el "remolino" de
-rayos brillantes durante 0.5s, y la onda expansiva de 0.12s quedaba enterrada debajo.
-
-**Causa raíz:** `_play_mini_charge()` en `StoryMatch.gd` y `VersusMatch.gd` era ruido
-creativo mío (V0.8.7.4) — no estaba en el spec original del juego, donde el respawn
-siempre fue **"onda expansiva + blink"**. El spec se cumplió en código pero no en
-percepción: visualmente el "remolino" dominaba la pantalla.
-
-**Fix:**
-- `scripts/ui/StoryMatch.gd`: eliminado `_play_mini_charge()`. La gema se desvanece
-  y el callback encadena directamente con `player.respawn(target)`.
-- `scripts/ui/VersusMatch.gd`: mismo cambio.
-- Secuencia final: gema viaja al cuerpo (0.9s) → cuerpo se eleva (0.3s) + gema crece
-  con aura (1s) → **onda expansiva + blink** (lo que siempre debió ser).
-
-### Versión
-- `project.godot`: `0.8.7.4.1 → 0.8.7.4.2`.
-- `CLAUDE.md` actualizado: la "mini-carga con rayos" desaparece del spec de la
-  secuencia de respawn.
-
-### Tests
-- Suite existente (17/17) sigue pasando. La respawn sequence ya estaba cubierta por
-  V087Test (3/3 casos de ammo); el cambio es solo visual.
-
----
-
 ## [0.8.7.4.1] — 2026-06-28 — Fix crash en respawn + split AMMO_INITIAL vs AMMO_START
 
 ### Bug fix 1 — Crash al revivir (clavo total del juego)

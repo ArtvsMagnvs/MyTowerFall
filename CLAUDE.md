@@ -36,7 +36,7 @@ Actualizar las secciones relevantes cuando se tomen nuevas decisiones o cambie e
 - Cuatro monstruos con IA propia: Slime, Espectro Arquero, Troll de Piedra, Murciélago Sombra
 - Stomp (jugador↔jugador y jugador↔monstruo)
 - Screen wrapping estilo TowerFall (ghost sprite)
-- Sistema de vidas (4 vidas, respawn con secuencia animada: gema viaja al cuerpo → cuerpo se eleva → aura de gema 1s → onda expansiva + blink 1.5s)
+- Sistema de vidas (4 vidas, respawn con secuencia animada: gema viaja al cuerpo → cuerpo se eleva → aura de gema 1s → mini-carga con rayos 0.5s → onda expansiva + blink 1.5s)
 - Tres niveles completos (diseño de arena 240×180)
 - Modos Versus (mejor de 5 rondas) e Historia (3 niveles, oleadas, 4 vidas)
 - HUD con paneles laterales de 40px
@@ -292,7 +292,7 @@ proj_gravity   = 170.0  px/s²  # V0.8.7.4: -15% (200 → 170)
 - **Cuenta atrás 3,2,1,¡YA! al iniciar** (V0.8.2 E-3): jugadores `frozen`; los monstruos no spawnan hasta que termina.
 - **Sistema de oleadas con mini-oleadas y portales** (V0.8.2 F): cada oleada se compone de 2–4 mini-oleadas escalonadas. Cada monstruo emerge de un **portal violeta** 1s después de aparecer este. La oleada solo se supera cuando mueren TODOS los monstruos de TODAS sus mini-oleadas. Totales: N1=13, N2=18, N3=30.
 - Game Over: "HAS CAÍDO" con opción de reintentar
-- **Secuencia de respawn (V0.8.7.4)**: el cristal de respawn viaja a la posición final del cadáver (0.35s de espera + arco de 0.9s). Al llegar: el cuerpo se eleva ligeramente + se ilumina (0.3s placeholder), la gema crece con aura dorada (1s) y se desvanece, y finalmente el player aparece en el spawn seguro con la onda expansiva (0.12s) y el blink de invuln (1.5s). Total ≈ 2.4s. **(V0.8.7.4.2)**: la "mini-carga con rayos eléctricos decorativos" que había entre la gema y la onda se eliminó — tapaba la propia onda expansiva. Si el cadáver cayó al vacío, **hace screen wrap vertical** (igual que player/monstruo) en vez de eliminarse, así la flecha sigue siendo recogible (V0.8.7.4).
+- **Secuencia de respawn (V0.8.7.4)**: el cristal de respawn viaja a la posición final del cadáver (0.35s de espera + arco de 0.9s). Al llegar: el cuerpo se eleva ligeramente + se ilumina (0.3s placeholder), la gema crece con aura dorada (1s) y se desvanece, mini-carga con rayos eléctricos decorativos (0.5s, sin hitbox), y finalmente el player aparece en el spawn seguro con la onda expansiva (0.12s) y el blink de invuln (1.5s). Total ≈ 2.4s. Si el cadáver cayó al vacío, **hace screen wrap vertical** (igual que player/monstruo) en vez de eliminarse, así la flecha sigue siendo recogible (V0.8.7.4).
 
 ### Versus — cuenta atrás
 - V0.8.2 E-3: misma cuenta atrás 3,2,1,¡YA! con ambos jugadores `frozen` al inicio del match.
