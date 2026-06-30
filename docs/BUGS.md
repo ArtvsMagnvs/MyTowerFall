@@ -25,37 +25,6 @@ Fecha cierre:
 ## Bugs cerrados
 
 ---
-ID: BUG-042  ·  Estado: CERRADO  ·  Severidad: CRÍTICO  ·  Cierre: 2026-06-28 (V0.8.7.4.1)
-Descripción: Crash total durante la secuencia de respawn de StoryMatch. El personaje
-  desaparecía (sprite gone) y el juego quedaba totalmente clavado: el jugador no
-  podía moverse ni disparar, los monstruos seguían patrullando como si nada.
-Causa raíz: `scripts/ui/StoryMatch.gd:199` llamaba a `player.respawn_with_visual_state(target, corpse_node)` —
-  función que **nunca se implementó** en `PlayerBase`. (En `VersusMatch.gd` se usaba
-  correctamente `player.respawn(target)`.) El error GDScript "Invalid call. Nonexistent
-  function 'respawn_with_visual_state'..." se disparaba dentro del `tween_callback`
-  lambda, dejando al jugador con `is_dead=true` para siempre. El sprite desaparecía
-  porque `_visual.visible = false` al morir, pero el nodo y el AmmoCounter seguían en
-  el árbol.
-Fix: StoryMatch ahora llama a `player.respawn(target)`. El efecto "flotando" durante
-  la onda expansiva (`_play_floating_vfx()`) ya está integrado dentro de `respawn()`,
-  así que no se pierde nada visual. Verificado: V087Test añadido (3/3 PASS), suite
-  completa 17/17 sin regresiones.
----
-ID: BUG-041  ·  Estado: CERRADO  ·  Severidad: MEDIO  ·  Cierre: 2026-06-28 (V0.8.7.4.1)
-Descripción: Al iniciar una partida el jugador tenía solo 1 flecha. Debería empezar
-  con 3; solo debería obtener 1 cuando muere y se revive con la gema de vida.
-Causa raíz: `AMMO_START = 1` se usaba para DOS contextos distintos (spawn inicial y
-  respawn tras muerte). Además `_ready()` hacía `ammo = AMMO_START`, pisando el
-  default de la var.
-Fix: split en `PlayerBase.gd`:
-- `const AMMO_INITIAL := 3` (al spawnear / inicio de cada ronda de Versus).
-- `const AMMO_START := 1` (al revivir tras muerte+gema).
-- `var ammo: int = AMMO_INITIAL` (default).
-- `_ready()` ahora asigna `ammo = AMMO_INITIAL`.
-- `respawn(at, ammo_override: int = AMMO_START)` — el `VersusMatch._start_round()` pasa
-  explícitamente `AMMO_INITIAL`; el `_respawn_player` (en ambos modos) deja el default.
-Verificado: V087Test (3/3 PASS), suite completa 17/17.
----
 ID: BUG-040  ·  Estado: CERRADO  ·  Severidad: BAJO  ·  Cierre: 2026-06-28 (V0.8.7.4)
 Descripción: El Cadáver al caer al vacío se eliminaba por completo (junto con la flecha
   que llevara clavada). Resultado: si un monstruo moría por flecha en el borde de una

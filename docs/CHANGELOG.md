@@ -4,46 +4,6 @@ Formato: [SemVer](https://semver.org/) — MAJOR.MINOR.PATCH
 
 ---
 
-## [0.8.7.4.1] — 2026-06-28 — Fix crash en respawn + split AMMO_INITIAL vs AMMO_START
-
-### Bug fix 1 — Crash al revivir (clavo total del juego)
-**Síntoma:** durante la nueva secuencia de respawn (Fase 4 de V0.8.7.4), justo cuando el
-cadáver empieza a flotar y la mini-carga con rayos eléctricos se inicia, el juego
-se clava. El personaje desaparece (el contador de flechas sigue visible), los
-monstruos siguen patrullando, pero el jugador no puede hacer nada.
-**Causa raíz:** `scripts/ui/StoryMatch.gd` llamaba a `player.respawn_with_visual_state(...)`
-que **nunca se implementó** en `PlayerBase`. Esa función se referenciaba solo en el
-script de StoryMatch; en VersusMatch ya se usaba correctamente `player.respawn(target)`.
-El error GDScript "Invalid call. Nonexistent function 'respawn_with_visual_state'..." se
-producía en el lambda del callback del tween, dejando `is_dead=true` en el jugador para
-siempre y, con `_visual.visible = false` por estar muerto, el sprite desaparecía pero el
-nodo seguía ahí.
-**Fix:** StoryMatch ahora usa `player.respawn(target)` como VersusMatch. El efecto
-"flotando" durante la onda expansiva (`_play_floating_vfx()`) ya está integrado dentro
-de `respawn()`, así que no se pierde nada visual.
-
-### Bug fix 2 — Munición inicial correcta
-**Síntoma:** al iniciar una partida el jugador tenía solo 1 flecha (en vez de 3).
-Solo debería tener 1 cuando muere y se revive con la gema de vida.
-**Causa raíz:** `AMMO_START = 1` se usaba tanto para spawn inicial como para respawn
-tras muerte (mismo valor para dos contextos distintos). Además `_ready()` forzaba
-`ammo = AMMO_START`, pisando el default `3`.
-**Fix:** split en `PlayerBase.gd`:
-- `AMMO_INITIAL = 3` (al spawnear por primera vez o al inicio de cada ronda de Versus).
-- `AMMO_START = 1` (al revivir tras muerte+gema).
-- `var ammo: int = AMMO_INITIAL` (default 3 al instanciar el personaje).
-- `_ready()` ahora asigna `ammo = AMMO_INITIAL`.
-- `respawn(at, ammo_override: int = AMMO_START)` — al inicio de ronda se llama con
-  `AMMO_INITIAL` (caso `VersusMatch._start_round`); al revivir por muerte se deja el
-  default `AMMO_START` (caso `_respawn_player` en ambos modos).
-
-### Tests
-- **V087Test nuevo** (3/3 PASS): cubre los 3 casos — spawn inicial sin respawn, respawn
-  por defecto (muerte), respawn con override `AMMO_INITIAL` (inicio de ronda).
-- **17/17 PASS total**, 0 regresiones.
-
----
-
 ## [0.8.7.4] — 2026-06-28 — Cadáver con screen wrap · 1 flecha al revivir · -15% velocidades · Nueva secuencia de respawn
 
 Cinco cambios para mejorar el feel general del juego:
